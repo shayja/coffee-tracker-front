@@ -7,7 +7,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 class AuthService {
   final http.Client client;
   final FlutterSecureStorage storage;
-  static const _baseUrl = 'http://localhost:6000/api/v1/auth';
+  static const _baseUrl = 'http://localhost:3000/api/v1/auth';
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
 

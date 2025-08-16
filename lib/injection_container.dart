@@ -51,7 +51,7 @@ Future<void> init() async {
   sl.registerLazySingleton<CoffeeTrackerRemoteDataSource>(
     () => CoffeeTrackerRemoteDataSourceImpl(
       client: sl(),
-      baseUrl: 'http://localhost:6000',
+      baseUrl: 'http://localhost:3000',
       authService: sl(),
     ),
   );
