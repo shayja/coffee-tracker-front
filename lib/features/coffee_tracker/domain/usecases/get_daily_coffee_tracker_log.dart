@@ -6,7 +6,7 @@ import '../entities/coffee_tracker_entry.dart';
 import '../repositories/coffee_tracker_repository.dart';
 
 class GetDailyCoffeeTrackerLog {
-  final CoffeerRepository repository;
+  final CoffeeTrackerRepository repository;
 
   GetDailyCoffeeTrackerLog(this.repository);
 

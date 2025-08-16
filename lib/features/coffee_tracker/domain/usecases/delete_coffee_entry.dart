@@ -1,3 +1,5 @@
+// file: lib/features/coffee_tracker/domain/usecases/delete_coffee_entry.dart
+// This file defines the DeleteCoffeeEntryUseCase for deleting a coffee tracker entry.
 import 'package:coffee_tracker/core/error/failures.dart';
 import 'package:coffee_tracker/core/usecases/usecase.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_tracker_entry.dart';
@@ -6,7 +8,7 @@ import 'package:dartz/dartz.dart';
 
 class DeleteCoffeeEntryUseCase
     implements UseCase<void, DeleteCoffeeEntryParams> {
-  final CoffeerRepository repository;
+  final CoffeeTrackerRepository repository;
 
   DeleteCoffeeEntryUseCase(this.repository);
 

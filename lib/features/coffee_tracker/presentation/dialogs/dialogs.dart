@@ -8,7 +8,7 @@ Future<bool?> showEditCoffeeEntryDialog({
   required void Function(String newDescription, DateTime newTimestamp)
   onConfirm,
 }) async {
-  final descriptionController = TextEditingController(text: entry.description);
+  final descriptionController = TextEditingController(text: entry.notes);
   DateTime selectedDateTime = entry.timestamp;
 
   return showDialog<bool>(

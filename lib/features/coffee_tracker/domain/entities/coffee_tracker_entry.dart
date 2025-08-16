@@ -1,23 +1,24 @@
+// file: lib/features/coffee_tracker/domain/entities/coffee_tracker_entry.dart
 class CoffeeTrackerEntry {
   final String id;
   final DateTime timestamp;
-  final String description;
+  final String notes;
 
   CoffeeTrackerEntry({
     required this.id,
     required this.timestamp,
-    required this.description,
+    required this.notes,
   });
 
   CoffeeTrackerEntry copyWith({
     String? id,
     DateTime? timestamp,
-    String? description,
+    String? notes,
   }) {
     return CoffeeTrackerEntry(
       id: id ?? this.id,
       timestamp: timestamp ?? this.timestamp,
-      description: description ?? this.description,
+      notes: notes ?? this.notes,
     );
   }
 
@@ -26,15 +27,11 @@ class CoffeeTrackerEntry {
     return CoffeeTrackerEntry(
       id: json['id'],
       timestamp: DateTime.parse(json['timestamp']),
-      description: json['description'],
+      notes: json['notes'],
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'timestamp': timestamp.toIso8601String(),
-      'description': description,
-    };
+    return {'id': id, 'timestamp': timestamp.toIso8601String(), 'notes': notes};
   }
 }

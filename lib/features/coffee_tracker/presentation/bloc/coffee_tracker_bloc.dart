@@ -40,7 +40,7 @@ class CoffeeTrackerBloc extends Bloc<CoffeeTrackerEvent, CoffeeTrackerState> {
     final entry = CoffeeTrackerEntry(
       id: const Uuid().v4(),
       timestamp: event.timestamp,
-      description: event.description,
+      notes: event.notes,
     );
 
     final result = await addCoffeeEntry(AddCoffeeEntryParams(entry));

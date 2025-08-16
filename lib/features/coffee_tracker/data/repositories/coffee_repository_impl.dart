@@ -1,5 +1,6 @@
-import 'dart:convert';
-
+// lib/features/coffee_tracker/data/repositories/coffee_repository_impl.dart
+import 'package:coffee_tracker/core/network/network_info.dart';
+import 'package:coffee_tracker/features/coffee_tracker/data/datasources/coffee_tracker_remote_data_source.dart';
 import 'package:dartz/dartz.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -7,31 +8,28 @@ import '../../../../core/error/failures.dart';
 import '../../domain/entities/coffee_tracker_entry.dart';
 import '../../domain/repositories/coffee_tracker_repository.dart';
 
-const String cachedCoffeeEntriesPrefix = 'CACHED_COFFEE_ENTRIES_';
-
-class CoffeerRepositoryImpl implements CoffeerRepository {
+class CoffeeRepositoryImpl implements CoffeeTrackerRepository {
+  final CoffeeTrackerRemoteDataSource remoteDataSource;
   final SharedPreferences sharedPreferences;
+  final NetworkInfo networkInfo;
 
-  CoffeerRepositoryImpl({required this.sharedPreferences});
+  CoffeeRepositoryImpl({
+    required this.remoteDataSource,
+    required this.sharedPreferences,
+    required this.networkInfo,
+  });
 
   @override
   Future<Either<Failure, void>> addEntry(CoffeeTrackerEntry entry) async {
     try {
-      final key = '$cachedCoffeeEntriesPrefix${_formatDate(entry.timestamp)}';
-      final currentEntriesJson = sharedPreferences.getStringList(key) ?? [];
-
-      final updatedEntries = [
-        ...currentEntriesJson,
-        jsonEncode(entry.toJson()),
-      ];
-
-      final success = await sharedPreferences.setStringList(
-        key,
-        updatedEntries,
-      );
-      return success ? Right(null) : Left(CacheFailure());
+      if (await networkInfo.isConnected) {
+        await remoteDataSource.addEntry(entry);
+        return Right(null);
+      } else {
+        return Left(NetworkFailure());
+      }
     } catch (e) {
-      return Left(CacheFailure());
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
@@ -41,60 +39,28 @@ class CoffeerRepositoryImpl implements CoffeerRepository {
     CoffeeTrackerEntry newEntry,
   ) async {
     try {
-      final oldKey =
-          '$cachedCoffeeEntriesPrefix${_formatDate(oldEntry.timestamp)}';
-      final newKey =
-          '$cachedCoffeeEntriesPrefix${_formatDate(newEntry.timestamp)}';
-
-      // 1. Remove old entry from its original date
-      final oldEntriesJson = sharedPreferences.getStringList(oldKey) ?? [];
-
-      final filteredOldEntries = oldEntriesJson
-          .map((e) => CoffeeTrackerEntry.fromJson(jsonDecode(e)))
-          .where((entry) => entry.id != oldEntry.id) // Compare by id
-          .map((entry) => jsonEncode(entry.toJson()))
-          .toList();
-
-      await sharedPreferences.setStringList(oldKey, filteredOldEntries);
-
-      // 2. Add new entry to the (possibly new) date
-      final newEntriesJson = sharedPreferences.getStringList(newKey) ?? [];
-      newEntriesJson.add(jsonEncode(newEntry.toJson()));
-
-      final success = await sharedPreferences.setStringList(
-        newKey,
-        newEntriesJson,
-      );
-      return success ? Right(null) : Left(CacheFailure());
+      if (await networkInfo.isConnected) {
+        await remoteDataSource.editEntry(oldEntry, newEntry);
+        return Right(null);
+      } else {
+        return Left(NetworkFailure());
+      }
     } catch (e) {
-      return Left(CacheFailure());
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
   @override
   Future<Either<Failure, void>> deleteEntry(CoffeeTrackerEntry entry) async {
     try {
-      final key = '$cachedCoffeeEntriesPrefix${_formatDate(entry.timestamp)}';
-      final currentEntriesJson = sharedPreferences.getStringList(key) ?? [];
-
-      final currentEntries = currentEntriesJson.map((jsonString) {
-        final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
-        return CoffeeTrackerEntry.fromJson(jsonMap);
-      }).toList();
-
-      final updatedEntries = currentEntries
-          .where((existingEntry) => existingEntry.id != entry.id)
-          .map((entry) => jsonEncode(entry.toJson()))
-          .toList();
-
-      final success = await sharedPreferences.setStringList(
-        key,
-        updatedEntries,
-      );
-
-      return success ? Right(null) : Left(CacheFailure());
+      if (await networkInfo.isConnected) {
+        await remoteDataSource.deleteEntry(entry.id);
+        return Right(null);
+      } else {
+        return Left(NetworkFailure());
+      }
     } catch (e) {
-      return Left(CacheFailure());
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
@@ -103,25 +69,21 @@ class CoffeerRepositoryImpl implements CoffeerRepository {
     DateTime date,
   ) async {
     try {
-      final key = '$cachedCoffeeEntriesPrefix${_formatDate(date)}';
-      final entriesJson = sharedPreferences.getStringList(key) ?? [];
-
-      final entries = entriesJson
-          .map((e) => CoffeeTrackerEntry.fromJson(jsonDecode(e)))
-          .toList();
-
-      // Sort by timestamp ascending (earliest first)
-      entries.sort((a, b) => a.timestamp.compareTo(b.timestamp));
-
-      return Right(entries);
+      if (await networkInfo.isConnected) {
+        try {
+          final entries = await remoteDataSource.getEntriesByDate(date);
+          return Right(entries);
+        } on Exception catch (e) {
+          if (e.toString().contains('Authentication required')) {
+            return Left(AuthFailure());
+          }
+          return Left(ServerFailure(message: e.toString()));
+        }
+      } else {
+        return Left(NetworkFailure());
+      }
     } catch (e) {
-      return Left(CacheFailure());
+      return Left(ServerFailure(message: e.toString()));
     }
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.year.toString().padLeft(4, '0')}-'
-        '${date.month.toString().padLeft(2, '0')}-'
-        '${date.day.toString().padLeft(2, '0')}';
   }
 }

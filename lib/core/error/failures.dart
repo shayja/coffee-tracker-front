@@ -8,6 +8,20 @@ abstract class Failure extends Equatable {
 }
 
 // General failures
-class ServerFailure extends Failure {}
+// lib/core/error/failures.dart
+class ServerFailure extends Failure {
+  final String message;
+  const ServerFailure({required this.message});
+
+  @override
+  String toString() => 'ServerFailure: $message';
+}
+
+class AuthFailure extends Failure {
+  @override
+  String toString() => 'Authentication failed - please login again';
+}
 
 class CacheFailure extends Failure {}
+
+class NetworkFailure extends Failure {}

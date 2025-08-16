@@ -6,7 +6,7 @@ import 'package:coffee_tracker/features/coffee_tracker/domain/repositories/coffe
 import 'package:dartz/dartz.dart';
 
 class EditCoffeeEntryUseCase implements UseCase<void, EditCoffeeEntryParams> {
-  final CoffeerRepository repository;
+  final CoffeeTrackerRepository repository;
 
   EditCoffeeEntryUseCase(this.repository);
 

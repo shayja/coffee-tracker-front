@@ -1,3 +1,5 @@
+// file: lib/core/network/network_info.dart
+// This file defines the NetworkInfo interface for checking internet connectivity.
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 abstract class NetworkInfo {

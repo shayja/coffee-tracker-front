@@ -18,6 +18,14 @@ class CoffeeTrackerPage extends StatefulWidget {
 class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
   DateTime selectedDate = DateTime.now();
 
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     context.read<CoffeeTrackerBloc>().add(LoadDailyCoffeeLog(selectedDate));
+  //   });
+  // }
+
   @override
   void initState() {
     super.initState();

@@ -23,7 +23,7 @@ class CoffeeLogList extends StatelessWidget {
         ).format(entry.timestamp.toLocal());
 
         return ListTile(
-          title: Text(entry.description),
+          title: Text(entry.notes.isNotEmpty ? entry.notes : ''),
           subtitle: Text(timeString),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -36,7 +36,7 @@ class CoffeeLogList extends StatelessWidget {
                     entry: entry,
                     onConfirm: (newDescription, newTimestamp) {
                       final updatedEntry = entry.copyWith(
-                        description: newDescription,
+                        notes: newDescription,
                         timestamp: newTimestamp,
                       );
 
