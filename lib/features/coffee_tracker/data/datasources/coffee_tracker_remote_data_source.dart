@@ -32,13 +32,13 @@ class CoffeeTrackerRemoteDataSourceImpl
 
     // If token is null or expired, try to refresh
     if (token == null || (await authService.isTokenExpired(token))) {
-      print('Token missing or expired, attempting refresh...');
+      //print('Token missing or expired, attempting refresh...');
       final refreshed = await authService.refreshToken();
       if (refreshed) {
         token = await authService.accessToken;
-        print('Token refresh successful');
+        //print('Token refresh successful');
       } else {
-        print('Token refresh failed');
+        //('Token refresh failed');
         throw Exception('Authentication required - please login again');
       }
     }

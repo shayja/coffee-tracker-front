@@ -28,12 +28,12 @@ class AuthInterceptor implements InterceptorContract {
   Future<http.BaseResponse> interceptResponse({
     required http.BaseResponse response,
   }) async {
-    print('[Interceptor] Response from: ${response.request?.url}');
-    print('[Interceptor] Status: ${response.statusCode}');
+    // print('[Interceptor] Response from: ${response.request?.url}');
+    // print('[Interceptor] Status: ${response.statusCode}');
 
-    if (response is http.Response) {
-      print('[Interceptor] Response body: ${response.body}');
-    }
+    // if (response is http.Response) {
+    //   print('[Interceptor] Response body: ${response.body}');
+    // }
 
     // Only handle 401 Unauthorized responses
     if (response.statusCode != 401) {
