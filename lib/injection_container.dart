@@ -8,7 +8,7 @@ import 'package:http_interceptor/http_interceptor.dart';
 
 import 'core/network/network_info.dart';
 import 'core/auth/auth_service.dart';
-import 'core/auth/auth_interceptor.dart';
+import 'core/auth/auth_interceptor.dart' hide AuthService;
 import 'features/coffee_tracker/data/datasources/coffee_tracker_remote_data_source.dart';
 import 'features/coffee_tracker/data/repositories/coffee_repository_impl.dart';
 import 'features/coffee_tracker/domain/repositories/coffee_tracker_repository.dart';
@@ -17,6 +17,14 @@ import 'features/coffee_tracker/domain/usecases/edit_coffee_entry.dart';
 import 'features/coffee_tracker/domain/usecases/delete_coffee_entry.dart';
 import 'features/coffee_tracker/domain/usecases/get_daily_coffee_tracker_log.dart';
 import 'features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
+
+import 'features/auth/data/datasources/auth_remote_data_source.dart';
+import 'features/auth/data/repositories/auth_repository_impl.dart';
+import 'features/auth/domain/repositories/auth_repository.dart';
+import 'features/auth/domain/usecases/request_otp.dart';
+import 'features/auth/domain/usecases/verify_otp.dart';
+import 'features/auth/domain/usecases/is_authenticated.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -55,6 +63,9 @@ Future<void> init() async {
       authService: sl(),
     ),
   );
+  sl.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSourceImpl(authService: sl()),
+  );
 
   // Repository
   sl.registerLazySingleton<CoffeeTrackerRepository>(
@@ -64,12 +75,19 @@ Future<void> init() async {
       networkInfo: sl(),
     ),
   );
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+  );
 
   // Use cases
   sl.registerLazySingleton(() => AddCoffeeEntryUseCase(sl()));
   sl.registerLazySingleton(() => EditCoffeeEntryUseCase(sl()));
   sl.registerLazySingleton(() => DeleteCoffeeEntryUseCase(sl()));
   sl.registerLazySingleton(() => GetDailyCoffeeTrackerLog(sl()));
+
+  sl.registerLazySingleton(() => RequestOtp(sl()));
+  sl.registerLazySingleton(() => VerifyOtp(sl()));
+  sl.registerLazySingleton(() => IsAuthenticated(sl()));
 
   // Bloc (factory because we want new instance per screen)
   sl.registerFactory(
@@ -79,6 +97,10 @@ Future<void> init() async {
       editCoffeeEntry: sl(),
       deleteCoffeeEntry: sl(),
     ),
+  );
+
+  sl.registerFactory(
+    () => AuthBloc(requestOtp: sl(), verifyOtp: sl(), isAuthenticated: sl()),
   );
 }
 

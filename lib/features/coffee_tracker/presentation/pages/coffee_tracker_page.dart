@@ -1,4 +1,6 @@
 // coffee_tracker/lib/features/coffee_tracker/presentation/pages/coffee_tracker_page.dart
+import 'package:coffee_tracker/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:coffee_tracker/features/auth/presentation/bloc/auth_event.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/coffee_log_list.dart';
 import 'package:flutter/material.dart';
@@ -52,6 +54,14 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
           padding: const EdgeInsets.all(8.0),
           child: AddCoffeeButton(),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              context.read<AuthBloc>().add(LogoutEvent());
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [

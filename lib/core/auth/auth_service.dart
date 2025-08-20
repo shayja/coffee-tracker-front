@@ -29,18 +29,38 @@ class AuthService {
     return token != null && !(await isTokenExpired(token));
   }
 
-  // Login and save tokens
-  Future<bool> login(String email, String password) async {
-    final response = await client.post(
-      Uri.parse('$_baseUrl/login'),
-      body: {'email': email, 'password': password},
-    );
+  // Request OTP
+  Future<bool> requestOtp(String mobile) async {
+    try {
+      final response = await client.post(
+        Uri.parse('$_baseUrl/request-otp'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'mobile': mobile}),
+      );
 
-    if (response.statusCode == 200) {
-      await _saveTokensFromResponse(response.body);
-      return true;
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
     }
-    return false;
+  }
+
+  // Verify OTP and save tokens
+  Future<bool> verifyOtp(String mobile, String otp) async {
+    try {
+      final response = await client.post(
+        Uri.parse('$_baseUrl/verify-otp'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'mobile': mobile, 'otp': otp}),
+      );
+
+      if (response.statusCode == 200) {
+        await _saveTokensFromResponse(response.body);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
   }
 
   // Refresh token
@@ -51,7 +71,8 @@ class AuthService {
     try {
       final response = await client.post(
         Uri.parse('$_baseUrl/refresh'),
-        body: {'refresh_token': refreshToken},
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'refresh_token': refreshToken}),
       );
 
       if (response.statusCode == 200) {
