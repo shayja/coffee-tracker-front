@@ -18,6 +18,18 @@ class OtpSent extends AuthState {
   OtpSent({required this.mobile});
 }
 
+class OtpRequestFailed extends AuthState {
+  final String message;
+
+  OtpRequestFailed({required this.message});
+}
+
+class OtpVerificationFailed extends AuthState {
+  final String message;
+
+  OtpVerificationFailed({required this.message});
+}
+
 class AuthError extends AuthState {
   final String message;
 

@@ -21,6 +21,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<RequestOtpEvent>(_onRequestOtp);
     on<VerifyOtpEvent>(_onVerifyOtp);
     on<CheckAuthenticationEvent>(_onCheckAuthentication);
+    on<LogoutEvent>(_onLogout);
   }
 
   Future<void> _onRequestOtp(
@@ -30,8 +31,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     final result = await requestOtp(event.mobile);
     result.fold(
-      (failure) => emit(AuthError(message: 'Failed to send OTP')),
-      (success) => emit(OtpSent(mobile: event.mobile)),
+      (failure) => emit(OtpRequestFailed(message: 'Failed to send OTP')),
+      (success) {
+        if (success) {
+          emit(OtpSent(mobile: event.mobile));
+        } else {
+          emit(OtpRequestFailed(message: 'Failed to send OTP'));
+        }
+      },
     );
   }
 
@@ -44,8 +51,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       VerifyOtpParams(mobile: event.mobile, otp: event.otp),
     );
     result.fold(
-      (failure) => emit(AuthError(message: 'Invalid OTP')),
-      (success) => emit(AuthAuthenticated()),
+      (failure) => emit(OtpVerificationFailed(message: 'Invalid OTP')),
+      (success) {
+        if (success) {
+          emit(AuthAuthenticated());
+        } else {
+          emit(OtpVerificationFailed(message: 'Invalid OTP'));
+        }
+      },
     );
   }
 
@@ -61,5 +74,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           ? emit(AuthAuthenticated())
           : emit(AuthUnauthenticated()),
     );
+  }
+
+  // Update the _onLogout method in AuthBloc
+  Future<void> _onLogout(LogoutEvent event, Emitter<AuthState> emit) async {
+    // Call the logout method on AuthService
+    // You'll need to inject AuthService into AuthBloc or use a use case
+    emit(AuthUnauthenticated());
   }
 }

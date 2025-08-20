@@ -25,3 +25,11 @@ class AuthFailure extends Failure {
 class CacheFailure extends Failure {}
 
 class NetworkFailure extends Failure {}
+
+class InvalidInputFailure extends Failure {
+  final String message;
+  const InvalidInputFailure({required this.message});
+
+  @override
+  String toString() => 'InvalidInputFailure: $message';
+}

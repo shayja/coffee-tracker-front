@@ -22,7 +22,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
     try {
       final result = await remoteDataSource.requestOtp(mobile);
-      return Right(result);
+      return result
+          ? Right(true)
+          : Left(ServerFailure(message: 'Error requesting OTP'));
     } catch (e) {
       return Left(
         ServerFailure(message: 'Failed to request OTP: ${e.toString()}'),
@@ -35,14 +37,18 @@ class AuthRepositoryImpl implements AuthRepository {
     if (!await networkInfo.isConnected) {
       return Left(NetworkFailure());
     }
-
+    if (mobile.isEmpty || otp.isEmpty) {
+      return Left(
+        InvalidInputFailure(message: 'Mobile or OTP cannot be empty'),
+      );
+    }
     try {
       final result = await remoteDataSource.verifyOtp(mobile, otp);
-      return Right(result);
+      return result
+          ? Right(true)
+          : Left(ServerFailure(message: 'Error verifying OTP'));
     } catch (e) {
-      return Left(
-        ServerFailure(message: 'Failed to verify OTP: ${e.toString()}'),
-      );
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
