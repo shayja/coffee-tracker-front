@@ -15,20 +15,18 @@ class AuthRepositoryImpl implements AuthRepository {
   });
 
   @override
-  Future<Either<Failure, bool>> requestOtp(String mobile) async {
+  Future<Either<Failure, Map<String, dynamic>>> requestOtp(
+    String mobile,
+  ) async {
     if (!await networkInfo.isConnected) {
       return Left(NetworkFailure());
     }
 
     try {
       final result = await remoteDataSource.requestOtp(mobile);
-      return result
-          ? Right(true)
-          : Left(ServerFailure(message: 'Error requesting OTP'));
+      return Right(result);
     } catch (e) {
-      return Left(
-        ServerFailure(message: 'Failed to request OTP: ${e.toString()}'),
-      );
+      return Left(ServerFailure(message: 'Failed to request OTP'));
     }
   }
 
@@ -37,18 +35,12 @@ class AuthRepositoryImpl implements AuthRepository {
     if (!await networkInfo.isConnected) {
       return Left(NetworkFailure());
     }
-    if (mobile.isEmpty || otp.isEmpty) {
-      return Left(
-        InvalidInputFailure(message: 'Mobile or OTP cannot be empty'),
-      );
-    }
+
     try {
       final result = await remoteDataSource.verifyOtp(mobile, otp);
-      return result
-          ? Right(true)
-          : Left(ServerFailure(message: 'Error verifying OTP'));
+      return Right(result);
     } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
+      return Left(ServerFailure(message: 'Failed to verify OTP'));
     }
   }
 

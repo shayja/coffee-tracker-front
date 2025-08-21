@@ -16,6 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   final _mobileController = TextEditingController();
   final _otpController = TextEditingController();
   bool _otpSent = false;
+  String _currentMobile = '';
 
   @override
   void initState() {
@@ -36,14 +37,29 @@ class _LoginPageState extends State<LoginPage> {
           } else if (state is OtpSent) {
             setState(() {
               _otpSent = true;
+              _currentMobile = state.mobile;
             });
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('OTP sent successfully')),
             );
-          } else if (state is AuthError) {
+          } else if (state is OtpRequestFailed) {
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(SnackBar(content: Text(state.message)));
+          } else if (state is OtpVerificationFailed) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
+            // Stay on OTP page, don't navigate away
+          } else if (state is InvalidMobileNumber) {
+            // Show a more prominent error for invalid mobile
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 5),
+              ),
+            );
           }
         },
         child: Padding(
@@ -109,4 +125,6 @@ class _LoginPageState extends State<LoginPage> {
     _otpController.dispose();
     super.dispose();
   }
+
+  
 }

@@ -31,12 +31,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     final result = await requestOtp(event.mobile);
     result.fold(
-      (failure) => emit(OtpRequestFailed(message: 'Failed to send OTP')),
-      (success) {
-        if (success) {
+      (failure) =>
+          emit(OtpRequestFailed(message: 'Network error. Please try again.')),
+      (response) {
+        if (response['success'] == true) {
           emit(OtpSent(mobile: event.mobile));
         } else {
-          emit(OtpRequestFailed(message: 'Failed to send OTP'));
+          // Check if it's a 404 error (mobile not found)
+          if (response['statusCode'] == 404) {
+            emit(InvalidMobileNumber(message: response['message']));
+          } else {
+            emit(OtpRequestFailed(message: response['message']));
+          }
         }
       },
     );

@@ -4,13 +4,13 @@ import 'package:coffee_tracker/core/usecases/usecase.dart';
 import 'package:coffee_tracker/features/auth/domain/repositories/auth_repository.dart';
 import 'package:dartz/dartz.dart';
 
-class RequestOtp implements UseCase<bool, String> {
+class RequestOtp implements UseCase<Map<String, dynamic>, String> {
   final AuthRepository repository;
 
   RequestOtp(this.repository);
 
   @override
-  Future<Either<Failure, bool>> call(String mobile) async {
+  Future<Either<Failure, Map<String, dynamic>>> call(String mobile) async {
     return await repository.requestOtp(mobile);
   }
 }

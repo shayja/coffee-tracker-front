@@ -30,7 +30,7 @@ class AuthService {
   }
 
   // Request OTP
-  Future<bool> requestOtp(String mobile) async {
+  Future<Map<String, dynamic>> requestOtp(String mobile) async {
     try {
       final response = await client.post(
         Uri.parse('$_baseUrl/request-otp'),
@@ -38,9 +38,35 @@ class AuthService {
         body: jsonEncode({'mobile': mobile}),
       );
 
-      return response.statusCode == 200;
+      return {
+        'success': response.statusCode == 200,
+        'statusCode': response.statusCode,
+        'message': response.statusCode == 200
+            ? 'OTP sent successfully'
+            : _getErrorMessage(response.statusCode),
+      };
     } catch (e) {
-      return false;
+      return {
+        'success': false,
+        'statusCode': 500,
+        'message': 'Network error. Please check your connection.',
+      };
+    }
+  }
+
+  // Add this helper method
+  String _getErrorMessage(int statusCode) {
+    switch (statusCode) {
+      case 404:
+        return 'Mobile number not found. Please check your number or contact support.';
+      case 400:
+        return 'Invalid mobile number format.';
+      case 429:
+        return 'Too many attempts. Please try again later.';
+      case 500:
+        return 'Server error. Please try again later.';
+      default:
+        return 'Failed to send OTP. Please try again.';
     }
   }
 

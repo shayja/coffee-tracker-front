@@ -35,3 +35,9 @@ class AuthError extends AuthState {
 
   AuthError({required this.message});
 }
+
+class InvalidMobileNumber extends AuthState {
+  final String message;
+
+  InvalidMobileNumber({required this.message});
+}

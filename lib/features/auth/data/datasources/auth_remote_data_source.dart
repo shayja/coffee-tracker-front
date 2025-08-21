@@ -1,9 +1,8 @@
 // lib/features/auth/data/datasources/auth_remote_data_source.dart
-
 import 'package:coffee_tracker/core/auth/auth_service.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<bool> requestOtp(String mobile);
+  Future<Map<String, dynamic>> requestOtp(String mobile);
   Future<bool> verifyOtp(String mobile, String otp);
   Future<bool> isAuthenticated();
 }
@@ -14,7 +13,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl({required this.authService});
 
   @override
-  Future<bool> requestOtp(String mobile) async {
+  Future<Map<String, dynamic>> requestOtp(String mobile) async {
     return await authService.requestOtp(mobile);
   }
 

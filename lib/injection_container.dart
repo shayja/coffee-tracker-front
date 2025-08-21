@@ -8,7 +8,7 @@ import 'package:http_interceptor/http_interceptor.dart';
 
 import 'core/network/network_info.dart';
 import 'core/auth/auth_service.dart';
-import 'core/auth/auth_interceptor.dart' hide AuthService;
+import 'core/auth/auth_interceptor.dart';
 import 'features/coffee_tracker/data/datasources/coffee_tracker_remote_data_source.dart';
 import 'features/coffee_tracker/data/repositories/coffee_repository_impl.dart';
 import 'features/coffee_tracker/domain/repositories/coffee_tracker_repository.dart';
