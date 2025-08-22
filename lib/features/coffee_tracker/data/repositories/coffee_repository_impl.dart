@@ -20,14 +20,16 @@ class CoffeeRepositoryImpl implements CoffeeTrackerRepository {
   });
 
   @override
-  Future<Either<Failure, void>> addEntry(CoffeeTrackerEntry entry) async {
+  Future<Either<Failure, CoffeeTrackerEntry>> addEntry(
+    CoffeeTrackerEntry entry,
+  ) async {
+    if (!await networkInfo.isConnected) {
+      return Left(NetworkFailure());
+    }
+
     try {
-      if (await networkInfo.isConnected) {
-        await remoteDataSource.addEntry(entry);
-        return Right(null);
-      } else {
-        return Left(NetworkFailure());
-      }
+      final result = await remoteDataSource.addEntry(entry);
+      return Right(result);
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }

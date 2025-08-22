@@ -6,7 +6,7 @@ import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_tr
 
 abstract class CoffeeTrackerRemoteDataSource {
   Future<List<CoffeeTrackerEntry>> getEntriesByDate(DateTime date);
-  Future<void> addEntry(CoffeeTrackerEntry entry);
+  Future<CoffeeTrackerEntry> addEntry(CoffeeTrackerEntry entry);
   Future<void> editEntry(
     CoffeeTrackerEntry oldEntry,
     CoffeeTrackerEntry newEntry,
@@ -76,26 +76,24 @@ class CoffeeTrackerRemoteDataSourceImpl
   }
 
   @override
-  Future<void> addEntry(CoffeeTrackerEntry entry) async {
-    try {
-      final response = await client
-          .post(
-            Uri.parse('$baseUrl/api/v1/entries'),
-            headers: await _getHeaders(),
-            body: json.encode({
-              'timestamp': entry.timestamp.toIso8601String(),
-              'notes': entry.notes,
-            }),
-          )
-          .timeout(timeout);
+  Future<CoffeeTrackerEntry> addEntry(CoffeeTrackerEntry entry) async {
+    final jsonBody = jsonEncode(entry.toCreateJson());
 
-      if (response.statusCode != 201) {
-        throw Exception(
-          'Failed to add entry - Status: ${response.statusCode}, Body: ${response.body}',
-        );
-      }
-    } catch (e) {
-      throw Exception('Network error: ${e.toString()}');
+    final response = await client.post(
+      Uri.parse('$baseUrl/api/v1/entries'),
+      headers: await _getHeaders(),
+      body: jsonBody,
+    );
+
+    if (response.statusCode == 201) {
+      final jsonResponse = jsonDecode(response.body);
+      return CoffeeTrackerEntry.fromJson(jsonResponse);
+    } else if (response.statusCode == 401) {
+      throw Exception('Unauthorized: Please login again');
+    } else {
+      //print('Server error: ${response.statusCode}');
+      //print('Response body: ${response.body}');
+      throw Exception('Failed to add coffee entry: ${response.statusCode}');
     }
   }
 
@@ -107,10 +105,7 @@ class CoffeeTrackerRemoteDataSourceImpl
     final response = await client.put(
       Uri.parse('$baseUrl/api/v1/entries/${oldEntry.id}'),
       headers: await _getHeaders(),
-      body: json.encode({
-        'timestamp': newEntry.timestamp.toIso8601String(),
-        'notes': newEntry.notes,
-      }),
+      body: jsonEncode(newEntry.toUpdateJson()),
     );
 
     if (response.statusCode != 200) {

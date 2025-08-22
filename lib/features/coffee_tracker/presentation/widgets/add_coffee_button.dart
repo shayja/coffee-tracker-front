@@ -97,7 +97,7 @@ class AddCoffeeButton extends StatelessWidget {
             );
 
             context.read<CoffeeTrackerBloc>().add(
-              AddCoffeeCup(
+              AddCoffeeEntry(
                 timestamp: combined,
                 notes: descriptionController.text.trim(),
               ),

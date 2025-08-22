@@ -16,7 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   final _mobileController = TextEditingController();
   final _otpController = TextEditingController();
   bool _otpSent = false;
-  String _currentMobile = '';
+  //String _currentMobile = '';
 
   @override
   void initState() {
@@ -37,7 +37,7 @@ class _LoginPageState extends State<LoginPage> {
           } else if (state is OtpSent) {
             setState(() {
               _otpSent = true;
-              _currentMobile = state.mobile;
+              //_currentMobile = state.mobile;
             });
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('OTP sent successfully')),
@@ -125,6 +125,4 @@ class _LoginPageState extends State<LoginPage> {
     _otpController.dispose();
     super.dispose();
   }
-
-  
 }

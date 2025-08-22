@@ -22,7 +22,7 @@ class CoffeeTrackerBloc extends Bloc<CoffeeTrackerEvent, CoffeeTrackerState> {
     required this.editCoffeeEntry,
     required this.deleteCoffeeEntry,
   }) : super(CoffeeTrackerInitial()) {
-    on<AddCoffeeCup>(_onAddCoffeeCup);
+    on<AddCoffeeEntry>(_onAddCoffeeCup);
     on<LoadDailyCoffeeLog>(_onLoadDailyLog);
     on<EditCoffeeEntry>(_onEditCoffeeEntry);
     on<DeleteCoffeeEntry>(_onDeleteCoffeeEntry);
@@ -32,13 +32,13 @@ class CoffeeTrackerBloc extends Bloc<CoffeeTrackerEvent, CoffeeTrackerState> {
   DateTime _stripTime(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
 
   Future<void> _onAddCoffeeCup(
-    AddCoffeeCup event,
+    AddCoffeeEntry event,
     Emitter<CoffeeTrackerState> emit,
   ) async {
     emit(CoffeeTrackerLoading());
 
     final entry = CoffeeTrackerEntry(
-      id: const Uuid().v4(),
+      id: const Uuid().v4(), // This is fine for client-side ID
       timestamp: event.timestamp,
       notes: event.notes,
     );
@@ -126,7 +126,7 @@ class CoffeeTrackerBloc extends Bloc<CoffeeTrackerEvent, CoffeeTrackerState> {
     String onErrorMessage = 'Failed to reload log',
   }) async {
     final result = await getLogByDate(date);
-    
+
     result.fold(
       (failure) => emit(CoffeeTrackerError(onErrorMessage)),
       (entries) => emit(CoffeeTrackerLoaded(entries)),

@@ -9,11 +9,11 @@ abstract class CoffeeTrackerEvent extends Equatable {
 }
 
 // Event to add a cup
-class AddCoffeeCup extends CoffeeTrackerEvent {
+class AddCoffeeEntry extends CoffeeTrackerEvent {
   final DateTime timestamp;
   final String notes;
 
-  const AddCoffeeCup({required this.timestamp, required this.notes});
+  const AddCoffeeEntry({required this.timestamp, required this.notes});
 
   @override
   List<Object?> get props => [timestamp, notes];

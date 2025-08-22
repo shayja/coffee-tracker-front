@@ -5,7 +5,9 @@ import '../../../../core/error/failures.dart';
 import '../entities/coffee_tracker_entry.dart';
 
 abstract class CoffeeTrackerRepository {
-  Future<Either<Failure, void>> addEntry(CoffeeTrackerEntry entry);
+  Future<Either<Failure, CoffeeTrackerEntry>> addEntry(
+    CoffeeTrackerEntry entry,
+  );
   Future<Either<Failure, void>> editEntry(
     CoffeeTrackerEntry oldEntry,
     CoffeeTrackerEntry newEntry,
