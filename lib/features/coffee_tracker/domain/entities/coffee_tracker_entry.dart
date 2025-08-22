@@ -37,7 +37,11 @@ class CoffeeTrackerEntry {
   }
 
   Map<String, dynamic> toUpdateJson() {
-    return {'id': id, 'timestamp': timestamp.toIso8601String(), 'notes': notes};
+    return {
+      'id': id,
+      'timestamp': _formatTimestampForGo(timestamp),
+      'notes': notes,
+    };
   }
 
   // Helper method to format timestamp for backend

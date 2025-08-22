@@ -102,11 +102,15 @@ class CoffeeTrackerRemoteDataSourceImpl
     CoffeeTrackerEntry oldEntry,
     CoffeeTrackerEntry newEntry,
   ) async {
+    final jsonBody = jsonEncode(newEntry.toUpdateJson());
+    print('Response body: ${jsonBody}');
     final response = await client.put(
       Uri.parse('$baseUrl/api/v1/entries/${oldEntry.id}'),
       headers: await _getHeaders(),
-      body: jsonEncode(newEntry.toUpdateJson()),
+      body: jsonBody,
     );
+    print('Server error: ${response.statusCode}');
+    print('Response body: ${response.body}');
 
     if (response.statusCode != 200) {
       throw Exception('Failed to edit entry');
