@@ -1,14 +1,14 @@
 // coffee_tracker/lib/features/coffee_tracker/presentation/pages/coffee_tracker_page.dart
 import 'package:coffee_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:coffee_tracker/features/auth/presentation/bloc/auth_event.dart';
+import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
+import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_state.dart';
+import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/add_coffee_button.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/coffee_log_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import '../bloc/coffee_tracker_bloc.dart';
-import '../bloc/coffee_tracker_state.dart';
-import '../widgets/add_coffee_button.dart';
 
 class CoffeeTrackerPage extends StatefulWidget {
   const CoffeeTrackerPage({super.key});

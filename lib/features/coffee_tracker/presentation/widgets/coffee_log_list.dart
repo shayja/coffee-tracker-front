@@ -1,11 +1,11 @@
 // coffee_tracker/lib/features/coffee_tracker/presentation/widgets/coffee_log_list.dart
+import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_tracker_entry.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/dialogs/dialogs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import '../../domain/entities/coffee_tracker_entry.dart';
 
 class CoffeeLogList extends StatelessWidget {
   final List<CoffeeTrackerEntry> entries;

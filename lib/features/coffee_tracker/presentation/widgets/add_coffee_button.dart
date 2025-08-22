@@ -1,8 +1,8 @@
 // coffee_tracker/lib/features/coffee_tracker/presentation/widgets/add_coffee_button.dart
+import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
+import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/coffee_tracker_bloc.dart';
-import '../bloc/coffee_tracker_event.dart';
 
 class AddCoffeeButton extends StatelessWidget {
   const AddCoffeeButton({super.key});

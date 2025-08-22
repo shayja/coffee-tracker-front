@@ -1,12 +1,12 @@
 import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_tracker_entry.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/add_coffee_entry.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/delete_coffee_entry.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/edit_coffee_entry.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/get_daily_coffee_tracker_log.dart';
+import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
+import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
-import '../../domain/usecases/add_coffee_entry.dart';
-import '../../domain/usecases/get_daily_coffee_tracker_log.dart';
-import 'coffee_tracker_event.dart';
-import 'coffee_tracker_state.dart';
 
 class CoffeeTrackerBloc extends Bloc<CoffeeTrackerEvent, CoffeeTrackerState> {
   final AddCoffeeEntryUseCase addCoffeeEntry;

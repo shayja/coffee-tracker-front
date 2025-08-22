@@ -1,12 +1,11 @@
 // lib/features/coffee_tracker/data/repositories/coffee_repository_impl.dart
+import 'package:coffee_tracker/core/error/failures.dart';
 import 'package:coffee_tracker/core/network/network_info.dart';
 import 'package:coffee_tracker/features/coffee_tracker/data/datasources/coffee_tracker_remote_data_source.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_tracker_entry.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/repositories/coffee_tracker_repository.dart';
 import 'package:dartz/dartz.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../../../../core/error/failures.dart';
-import '../../domain/entities/coffee_tracker_entry.dart';
-import '../../domain/repositories/coffee_tracker_repository.dart';
 
 class CoffeeRepositoryImpl implements CoffeeTrackerRepository {
   final CoffeeTrackerRemoteDataSource remoteDataSource;
