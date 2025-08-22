@@ -20,14 +20,6 @@ class CoffeeTrackerPage extends StatefulWidget {
 class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
   DateTime selectedDate = DateTime.now();
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   WidgetsBinding.instance.addPostFrameCallback((_) {
-  //     context.read<CoffeeTrackerBloc>().add(LoadDailyCoffeeLog(selectedDate));
-  //   });
-  // }
-
   @override
   void initState() {
     super.initState();
@@ -52,7 +44,7 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
         title: const Text('☕ Daily Coffee Tracker'),
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: AddCoffeeButton(),
+          child: AddCoffeeButton(selectedDate: selectedDate),
         ),
         actions: [
           IconButton(

@@ -77,6 +77,7 @@ class CoffeeTrackerRemoteDataSourceImpl
 
   @override
   Future<CoffeeTrackerEntry> addEntry(CoffeeTrackerEntry entry) async {
+    //print(entry.timestamp.toIso8601String());
     final jsonBody = jsonEncode(entry.toCreateJson());
 
     final response = await client.post(
@@ -103,14 +104,14 @@ class CoffeeTrackerRemoteDataSourceImpl
     CoffeeTrackerEntry newEntry,
   ) async {
     final jsonBody = jsonEncode(newEntry.toUpdateJson());
-    print('Response body: ${jsonBody}');
+    //print('Response body: ${jsonBody}');
     final response = await client.put(
       Uri.parse('$baseUrl/api/v1/entries/${oldEntry.id}'),
       headers: await _getHeaders(),
       body: jsonBody,
     );
-    print('Server error: ${response.statusCode}');
-    print('Response body: ${response.body}');
+    //print('Server error: ${response.statusCode}');
+    //print('Response body: ${response.body}');
 
     if (response.statusCode != 200) {
       throw Exception('Failed to edit entry');

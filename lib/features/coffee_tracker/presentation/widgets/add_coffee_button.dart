@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AddCoffeeButton extends StatelessWidget {
-  const AddCoffeeButton({super.key});
+  final DateTime selectedDate;
+
+  const AddCoffeeButton({super.key, required this.selectedDate});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +18,7 @@ class AddCoffeeButton extends StatelessWidget {
         icon: const Icon(Icons.add, color: Colors.white, size: 20),
         onPressed: () async {
           final descriptionController = TextEditingController();
-          DateTime selectedDate = DateTime.now();
+          DateTime selectedDate = this.selectedDate;
           TimeOfDay selectedTime = TimeOfDay.now();
 
           final confirmed = await showDialog<bool>(
