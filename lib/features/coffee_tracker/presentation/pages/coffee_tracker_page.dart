@@ -20,6 +20,14 @@ class CoffeeTrackerPage extends StatefulWidget {
 class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
   DateTime selectedDate = DateTime.now();
 
+  // Helper method to check if selected date is today
+  bool get _isToday {
+    final now = DateTime.now();
+    return selectedDate.year == now.year &&
+        selectedDate.month == now.month &&
+        selectedDate.day == now.day;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -31,8 +39,20 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
   }
 
   void _changeDate(int offsetInDays) {
+    final newDate = selectedDate.add(Duration(days: offsetInDays));
+    final today = DateTime.now();
+
+    // Prevent navigating to future dates
+    if (newDate.year > today.year ||
+        (newDate.year == today.year && newDate.month > today.month) ||
+        (newDate.year == today.year &&
+            newDate.month == today.month &&
+            newDate.day > today.day)) {
+      return;
+    }
+
     setState(() {
-      selectedDate = selectedDate.add(Duration(days: offsetInDays));
+      selectedDate = newDate;
     });
     _loadLogForDate(selectedDate);
   }
@@ -72,7 +92,7 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
               ),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
-                onPressed: () => _changeDate(1),
+                onPressed: _isToday ? null : () => _changeDate(1),
               ),
             ],
           ),
