@@ -70,31 +70,25 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.bar_chart),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BlocProvider.value(
+                    value: BlocProvider.of<StatisticsBloc>(context),
+                    child: const StatisticsPage(),
+                  ),
+                ),
+              );
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
               context.read<AuthBloc>().add(LogoutEvent());
             },
           ),
-           IconButton(
-    icon: const Icon(Icons.bar_chart),
-    onPressed: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => BlocProvider.value(
-            value: BlocProvider.of<StatisticsBloc>(context),
-            child: const StatisticsPage(),
-          ),
-        ),
-      );
-    },
-  ),
-  IconButton(
-    icon: const Icon(Icons.logout),
-    onPressed: () {
-      context.read<AuthBloc>().add(LogoutEvent());
-    },
-  ),
         ],
       ),
       body: Column(
