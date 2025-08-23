@@ -45,22 +45,19 @@ class CoffeeTrackerBloc extends Bloc<CoffeeTrackerEvent, CoffeeTrackerState> {
 
     final result = await addCoffeeEntry(AddCoffeeEntryParams(entry));
     final entryDate = _stripTime(event.timestamp);
-    final selectedDate = currentDate; // date currently displayed
+
+    // Keep showing the same date unless the added entry belongs to current date
+    final shouldRefreshDate = entryDate == currentDate
+        ? currentDate
+        : currentDate; // could be changed to entryDate if desired
 
     await result.fold(
       (failure) async => emit(CoffeeTrackerError('Failed to add entry')),
-      (_) async {
-        // Always reload the currently displayed date so the UI leaves loading state
-        await _reloadLogForDate(
-          date: selectedDate,
-          emit: emit,
-          onErrorMessage: 'Failed to reload data',
-        );
-        if (entryDate != selectedDate) {
-          currentDate = entryDate;
-          await _reloadLogForDate(date: entryDate, emit: emit);
-        }
-      },
+      (_) async => await _reloadLogForDate(
+        date: shouldRefreshDate,
+        emit: emit,
+        onErrorMessage: 'Failed to reload data',
+      ),
     );
   }
 

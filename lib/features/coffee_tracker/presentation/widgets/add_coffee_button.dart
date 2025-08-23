@@ -3,6 +3,7 @@ import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 class AddCoffeeButton extends StatelessWidget {
   final DateTime selectedDate;
@@ -40,13 +41,16 @@ class AddCoffeeButton extends StatelessWidget {
                         const SizedBox(height: 12),
                         ElevatedButton.icon(
                           icon: const Icon(Icons.calendar_today),
-                          label: Text("Date: ${_formatDate(selectedDate)}"),
+                          label: Text(
+                            "Date: ${DateFormat('yyyy-MM-dd').format(selectedDate)}",
+                          ),
                           onPressed: () async {
                             final pickedDate = await showDatePicker(
                               context: context,
                               initialDate: selectedDate,
                               firstDate: DateTime(2020),
-                              lastDate: DateTime.now(), // disable future dates
+                              lastDate: DateTime.now()
+                                  .toLocal(), // disable future dates
                             );
                             if (pickedDate != null) {
                               setState(() {
@@ -107,17 +111,15 @@ class AddCoffeeButton extends StatelessWidget {
 
             // optional: give immediate feedback to the user
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Saved for ${_formatDate(combined)}')),
+              SnackBar(
+                content: Text(
+                  'Saved for ${DateFormat('dd/MM/yyyy').format(combined)}',
+                ),
+              ),
             );
           }
         },
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.year.toString().padLeft(4, '0')}-'
-        '${date.month.toString().padLeft(2, '0')}-'
-        '${date.day.toString().padLeft(2, '0')}';
   }
 }

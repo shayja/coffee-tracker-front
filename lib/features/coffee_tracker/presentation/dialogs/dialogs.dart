@@ -54,12 +54,14 @@ Future<bool?> showEditCoffeeEntryDialog({
               ElevatedButton.icon(
                 icon: const Icon(Icons.access_time),
                 label: Text(
-                  "Time: ${TimeOfDay.fromDateTime(selectedDateTime).format(context)}",
+                  "Time: ${TimeOfDay.fromDateTime(selectedDateTime.toLocal()).format(context)}",
                 ),
                 onPressed: () async {
                   final pickedTime = await showTimePicker(
                     context: context,
-                    initialTime: TimeOfDay.fromDateTime(selectedDateTime),
+                    initialTime: TimeOfDay.fromDateTime(
+                      selectedDateTime.toLocal(),
+                    ),
                   );
                   if (pickedTime != null) {
                     setState(() {
