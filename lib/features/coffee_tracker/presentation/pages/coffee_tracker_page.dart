@@ -6,6 +6,8 @@ import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_state.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/add_coffee_button.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/coffee_log_list.dart';
+import 'package:coffee_tracker/features/statistics/presentation/bloc/statistics_bloc.dart';
+import 'package:coffee_tracker/features/statistics/presentation/pages/statistics_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -73,6 +75,26 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
               context.read<AuthBloc>().add(LogoutEvent());
             },
           ),
+           IconButton(
+    icon: const Icon(Icons.bar_chart),
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BlocProvider.value(
+            value: BlocProvider.of<StatisticsBloc>(context),
+            child: const StatisticsPage(),
+          ),
+        ),
+      );
+    },
+  ),
+  IconButton(
+    icon: const Icon(Icons.logout),
+    onPressed: () {
+      context.read<AuthBloc>().add(LogoutEvent());
+    },
+  ),
         ],
       ),
       body: Column(

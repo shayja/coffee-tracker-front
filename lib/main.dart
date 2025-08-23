@@ -1,5 +1,6 @@
 // lib/main.dart
 import 'package:coffee_tracker/features/auth/presentation/bloc/auth_state.dart';
+import 'package:coffee_tracker/features/statistics/presentation/bloc/statistics_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'injection_container.dart' as di;
@@ -24,6 +25,7 @@ class CoffeeTrackerApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (context) => di.sl<AuthBloc>()),
         BlocProvider(create: (context) => di.sl<CoffeeTrackerBloc>()),
+        BlocProvider(create: (context) => di.sl<StatisticsBloc>()),
       ],
       child: MaterialApp(
         title: 'Coffee Tracker ☕',

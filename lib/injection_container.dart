@@ -1,6 +1,11 @@
 // lib/injection_container.dart
 
 import 'package:coffee_tracker/core/config/app_config.dart';
+import 'package:coffee_tracker/features/statistics/data/datasources/statistics_remote_data_source.dart';
+import 'package:coffee_tracker/features/statistics/data/repositories/statistics_repository_impl.dart';
+import 'package:coffee_tracker/features/statistics/domain/repositories/statistics_repository.dart';
+import 'package:coffee_tracker/features/statistics/domain/usecases/get_statistics.dart';
+import 'package:coffee_tracker/features/statistics/presentation/bloc/statistics_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -40,7 +45,8 @@ Future<void> init() async {
 
   //! Core services
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
-  // 3. Register AuthService with explicit dependencies
+
+  // Register AuthService
   sl.registerLazySingleton<AuthService>(
     () => AuthService(
       client: sl<http.Client>(),
@@ -58,7 +64,6 @@ Future<void> init() async {
   );
 
   //! Features - Coffee Tracker
-  // Data sources (must come before repository)
   sl.registerLazySingleton<CoffeeTrackerRemoteDataSource>(
     () => CoffeeTrackerRemoteDataSourceImpl(
       client: sl(),
@@ -66,6 +71,7 @@ Future<void> init() async {
       authService: sl(),
     ),
   );
+
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(authService: sl()),
   );
@@ -78,6 +84,7 @@ Future<void> init() async {
       networkInfo: sl(),
     ),
   );
+
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
   );
@@ -105,6 +112,23 @@ Future<void> init() async {
   sl.registerFactory(
     () => AuthBloc(requestOtp: sl(), verifyOtp: sl(), isAuthenticated: sl()),
   );
+
+  //! Features - Statistics
+  sl.registerLazySingleton<StatisticsRemoteDataSource>(
+    () => StatisticsRemoteDataSourceImpl(
+      client: sl(),
+      baseUrl: AppConfig.baseUrl,
+      authService: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<StatisticsRepository>(
+    () => StatisticsRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton(() => GetStatistics(sl()));
+
+  sl.registerFactory(() => StatisticsBloc(getStatistics: sl()));
 }
 
 class ExpiredTokenRetryPolicy extends RetryPolicy {
