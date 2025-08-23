@@ -60,7 +60,7 @@ class CoffeeTrackerRemoteDataSourceImpl
       final response = await client
           .get(
             Uri.parse(
-              '$baseUrl/api/v1/entries?date=$formattedDate&tzOffset=$timezoneOffsetMinutes',
+              '$baseUrl/entries?date=$formattedDate&tzOffset=$timezoneOffsetMinutes',
             ),
             headers: await _getHeaders(),
           )
@@ -87,7 +87,7 @@ class CoffeeTrackerRemoteDataSourceImpl
     final jsonBody = jsonEncode(entry.toCreateJson());
 
     final response = await client.post(
-      Uri.parse('$baseUrl/api/v1/entries'),
+      Uri.parse('$baseUrl/entries'),
       headers: await _getHeaders(),
       body: jsonBody,
     );
@@ -112,7 +112,7 @@ class CoffeeTrackerRemoteDataSourceImpl
     final jsonBody = jsonEncode(newEntry.toUpdateJson());
     //print('Response body: ${jsonBody}');
     final response = await client.put(
-      Uri.parse('$baseUrl/api/v1/entries/${oldEntry.id}'),
+      Uri.parse('$baseUrl/entries/${oldEntry.id}'),
       headers: await _getHeaders(),
       body: jsonBody,
     );
@@ -127,7 +127,7 @@ class CoffeeTrackerRemoteDataSourceImpl
   @override
   Future<void> deleteEntry(String entryId) async {
     final response = await client.delete(
-      Uri.parse('$baseUrl/api/v1/entries/$entryId'),
+      Uri.parse('$baseUrl/entries/$entryId'),
       headers: await _getHeaders(),
     );
 
