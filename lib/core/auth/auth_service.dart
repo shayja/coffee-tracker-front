@@ -7,11 +7,15 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 class AuthService {
   final http.Client client;
   final FlutterSecureStorage storage;
-  static const _baseUrl = 'http://localhost:3000/api/v1/auth';
+  final String baseUrl;
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
 
-  AuthService({required this.client, required this.storage});
+  AuthService({
+    required this.client,
+    required this.storage,
+    required this.baseUrl,
+  });
 
   // Get current access token
   Future<String?> get accessToken async {
@@ -33,7 +37,7 @@ class AuthService {
   Future<Map<String, dynamic>> requestOtp(String mobile) async {
     try {
       final response = await client.post(
-        Uri.parse('$_baseUrl/request-otp'),
+        Uri.parse('$baseUrl/auth/request-otp'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'mobile': mobile}),
       );
@@ -74,7 +78,7 @@ class AuthService {
   Future<bool> verifyOtp(String mobile, String otp) async {
     try {
       final response = await client.post(
-        Uri.parse('$_baseUrl/verify-otp'),
+        Uri.parse('$baseUrl/auth/verify-otp'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'mobile': mobile, 'otp': otp}),
       );
@@ -96,7 +100,7 @@ class AuthService {
 
     try {
       final response = await client.post(
-        Uri.parse('$_baseUrl/refresh'),
+        Uri.parse('$baseUrl/auth/refresh'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'refresh_token': refreshToken}),
       );

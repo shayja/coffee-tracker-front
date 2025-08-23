@@ -1,4 +1,6 @@
 // lib/injection_container.dart
+
+import 'package:coffee_tracker/core/config/app_config.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -43,6 +45,7 @@ Future<void> init() async {
     () => AuthService(
       client: sl<http.Client>(),
       storage: sl<FlutterSecureStorage>(),
+      baseUrl: AppConfig.baseUrl,
     ),
   );
 
@@ -59,7 +62,7 @@ Future<void> init() async {
   sl.registerLazySingleton<CoffeeTrackerRemoteDataSource>(
     () => CoffeeTrackerRemoteDataSourceImpl(
       client: sl(),
-      baseUrl: 'http://localhost:3000',
+      baseUrl: AppConfig.baseUrl,
       authService: sl(),
     ),
   );
