@@ -1,6 +1,7 @@
 // lib/injection_container.dart
 
 import 'package:coffee_tracker/core/config/app_config.dart';
+import 'package:coffee_tracker/features/auth/domain/usecases/logout.dart';
 import 'package:coffee_tracker/features/statistics/data/datasources/statistics_remote_data_source.dart';
 import 'package:coffee_tracker/features/statistics/data/repositories/statistics_repository_impl.dart';
 import 'package:coffee_tracker/features/statistics/domain/repositories/statistics_repository.dart';
@@ -86,7 +87,11 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+    () => AuthRepositoryImpl(
+      remoteDataSource: sl(),
+      networkInfo: sl(),
+      authService: sl(),
+    ),
   );
 
   // Use cases
@@ -98,6 +103,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => RequestOtp(sl()));
   sl.registerLazySingleton(() => VerifyOtp(sl()));
   sl.registerLazySingleton(() => IsAuthenticated(sl()));
+  sl.registerLazySingleton(() => Logout(sl()));
 
   // Bloc (factory because we want new instance per screen)
   sl.registerFactory(
@@ -110,7 +116,12 @@ Future<void> init() async {
   );
 
   sl.registerFactory(
-    () => AuthBloc(requestOtp: sl(), verifyOtp: sl(), isAuthenticated: sl()),
+    () => AuthBloc(
+      requestOtp: sl(),
+      verifyOtp: sl(),
+      isAuthenticated: sl(),
+      logout: sl(),
+    ),
   );
 
   //! Features - Statistics

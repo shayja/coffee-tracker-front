@@ -1,6 +1,6 @@
 // coffee_tracker/lib/features/coffee_tracker/presentation/pages/coffee_tracker_page.dart
-import 'package:coffee_tracker/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:coffee_tracker/features/auth/presentation/bloc/auth_event.dart';
+import 'package:coffee_tracker/core/auth/auth_service.dart';
+import 'package:coffee_tracker/features/auth/presentation/pages/login_page.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_state.dart';
@@ -8,6 +8,7 @@ import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/add_
 import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/coffee_log_list.dart';
 import 'package:coffee_tracker/features/statistics/presentation/bloc/statistics_bloc.dart';
 import 'package:coffee_tracker/features/statistics/presentation/pages/statistics_page.dart';
+import 'package:coffee_tracker/injection_container.dart' as di;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -85,8 +86,36 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
           ),
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              context.read<AuthBloc>().add(LogoutEvent());
+            onPressed: () async {
+              // Show confirmation
+              final shouldLogout = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Logout'),
+                  content: const Text('Are you sure you want to logout?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Logout'),
+                    ),
+                  ],
+                ),
+              );
+
+              if (shouldLogout == true) {
+                // Call your existing AuthService logout
+                await di.sl<AuthService>().logout();
+
+                // Navigate to login
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                  (route) => false,
+                );
+              }
             },
           ),
         ],

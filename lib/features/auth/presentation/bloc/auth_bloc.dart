@@ -2,6 +2,7 @@
 
 import 'package:coffee_tracker/core/usecases/usecase.dart';
 import 'package:coffee_tracker/features/auth/domain/usecases/is_authenticated.dart';
+import 'package:coffee_tracker/features/auth/domain/usecases/logout.dart';
 import 'package:coffee_tracker/features/auth/domain/usecases/request_otp.dart';
 import 'package:coffee_tracker/features/auth/domain/usecases/verify_otp.dart';
 import 'package:coffee_tracker/features/auth/presentation/bloc/auth_event.dart';
@@ -12,11 +13,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final RequestOtp requestOtp;
   final VerifyOtp verifyOtp;
   final IsAuthenticated isAuthenticated;
+  final Logout logout;
 
   AuthBloc({
     required this.requestOtp,
     required this.verifyOtp,
     required this.isAuthenticated,
+    required this.logout,
   }) : super(AuthInitial()) {
     on<RequestOtpEvent>(_onRequestOtp);
     on<VerifyOtpEvent>(_onVerifyOtp);
@@ -84,8 +87,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   // Update the _onLogout method in AuthBloc
   Future<void> _onLogout(LogoutEvent event, Emitter<AuthState> emit) async {
-    // Call the logout method on AuthService
-    // You'll need to inject AuthService into AuthBloc or use a use case
-    emit(AuthUnauthenticated());
+    emit(AuthLoading());
+
+    final result = await logout(NoParams());
+
+    result.fold(
+      (failure) {
+        // Even if logout fails, we should transition to unauthenticated state
+        emit(AuthUnauthenticated());
+      },
+      (_) {
+        emit(AuthUnauthenticated());
+      },
+    );
   }
 }
