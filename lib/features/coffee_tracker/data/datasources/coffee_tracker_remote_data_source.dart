@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:coffee_tracker/core/auth/auth_service.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_tracker_entry.dart';
+import 'package:intl/intl.dart';
 
 abstract class CoffeeTrackerRemoteDataSource {
   Future<List<CoffeeTrackerEntry>> getEntriesByDate(DateTime date);
@@ -53,9 +54,14 @@ class CoffeeTrackerRemoteDataSourceImpl
   @override
   Future<List<CoffeeTrackerEntry>> getEntriesByDate(DateTime date) async {
     try {
+      String formattedDate = DateFormat('yyyy-MM-dd').format(date);
+
+      int timezoneOffsetMinutes = date.timeZoneOffset.inMinutes;
       final response = await client
           .get(
-            Uri.parse('$baseUrl/api/v1/entries?date=${date.toIso8601String()}'),
+            Uri.parse(
+              '$baseUrl/api/v1/entries?date=$formattedDate&tzOffset=$timezoneOffsetMinutes',
+            ),
             headers: await _getHeaders(),
           )
           .timeout(timeout);
