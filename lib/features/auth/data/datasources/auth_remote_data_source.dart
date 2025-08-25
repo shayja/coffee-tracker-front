@@ -3,7 +3,7 @@ import 'package:coffee_tracker/core/auth/auth_service.dart';
 
 abstract class AuthRemoteDataSource {
   Future<Map<String, dynamic>> requestOtp(String mobile);
-  Future<bool> verifyOtp(String mobile, String otp);
+  Future<String?> verifyOtp(String mobile, String otp);
   Future<bool> isAuthenticated();
 }
 
@@ -18,7 +18,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<bool> verifyOtp(String mobile, String otp) async {
+  Future<String?> verifyOtp(String mobile, String otp) async {
     return await authService.verifyOtp(mobile, otp);
   }
 

@@ -22,6 +22,12 @@
             </dict>
         </dict>
     </dict>
+	<!-- ===== END NETWORK SECURITY ===== -->
+
+	<!-- ===== BIOMETRIC AUTH ===== -->	
+	<key>NSFaceIDUsageDescription</key>
+	<string>This app uses Face ID for secure login.</string>
+	<!-- ===== END BIOMETRIC AUTH ===== -->
 
 
 	<key>CFBundleDevelopmentRegion</key>

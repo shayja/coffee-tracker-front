@@ -4,7 +4,8 @@ import 'package:dartz/dartz.dart';
 
 abstract class AuthRepository {
   Future<Either<Failure, Map<String, dynamic>>> requestOtp(String mobile);
-  Future<Either<Failure, bool>> verifyOtp(String mobile, String otp);
-  Future<Either<Failure, bool>> isAuthenticated();
+  Future<Either<Failure, String>> verifyOtp(String mobile, String otp);
+  Future<Either<Failure, String>> isAuthenticated();
   Future<Either<Failure, void>> logout();
+  Future<Either<Failure, String>> biometricLogin();
 }

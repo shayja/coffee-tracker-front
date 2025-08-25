@@ -17,11 +17,6 @@ class AuthService {
     required this.baseUrl,
   });
 
-  // Get current access token
-  Future<String?> get accessToken async {
-    return await storage.read(key: _accessTokenKey);
-  }
-
   // is token expired
   Future<bool> isTokenExpired(String token) async {
     return JwtDecoder.isExpired(token);
@@ -29,7 +24,7 @@ class AuthService {
 
   // Check if user is authenticated
   Future<bool> isAuthenticated() async {
-    final token = await accessToken;
+    final token = await getAccessToken();
     return token != null && !(await isTokenExpired(token));
   }
 
@@ -58,24 +53,8 @@ class AuthService {
     }
   }
 
-  // Add this helper method
-  String _getErrorMessage(int statusCode) {
-    switch (statusCode) {
-      case 404:
-        return 'Mobile number not found. Please check your number or contact support.';
-      case 400:
-        return 'Invalid mobile number format.';
-      case 429:
-        return 'Too many attempts. Please try again later.';
-      case 500:
-        return 'Server error. Please try again later.';
-      default:
-        return 'Failed to send OTP. Please try again.';
-    }
-  }
-
   // Verify OTP and save tokens
-  Future<bool> verifyOtp(String mobile, String otp) async {
+  Future<String?> verifyOtp(String mobile, String otp) async {
     try {
       final response = await client.post(
         Uri.parse('$baseUrl/auth/verify-otp'),
@@ -85,11 +64,13 @@ class AuthService {
 
       if (response.statusCode == 200) {
         await _saveTokensFromResponse(response.body);
-        return true;
+
+        return getAccessToken(); // Return the token
       }
-      return false;
+      return null;
     } catch (e) {
-      return false;
+      print('Error verifying OTP: $e');
+      return null;
     }
   }
 
@@ -121,11 +102,43 @@ class AuthService {
     await storage.delete(key: _refreshTokenKey);
   }
 
-  
+  // Get current access token
+  Future<String?> getAccessToken() async {
+    try {
+      return await storage.read(key: _accessTokenKey);
+    } catch (e) {
+      print('Error retrieving token: $e');
+      return null;
+    }
+  }
+
+  // Future<void> saveAccessToken(String token) async {
+  //   await storage.write(key: _accessTokenKey, value: token);
+  // }
+
+  // Future<void> saveRefreshToken(String refreshToken) async {
+  //   await storage.write(key: _refreshTokenKey, value: refreshToken);
+  // }
 
   Future<void> _saveTokensFromResponse(String responseBody) async {
     final json = jsonDecode(responseBody);
     await storage.write(key: _accessTokenKey, value: json[_accessTokenKey]);
     await storage.write(key: _refreshTokenKey, value: json[_refreshTokenKey]);
+  }
+
+  // Add this helper method
+  String _getErrorMessage(int statusCode) {
+    switch (statusCode) {
+      case 404:
+        return 'Mobile number not found. Please check your number or contact support.';
+      case 400:
+        return 'Invalid mobile number format.';
+      case 429:
+        return 'Too many attempts. Please try again later.';
+      case 500:
+        return 'Server error. Please try again later.';
+      default:
+        return 'Failed to send OTP. Please try again.';
+    }
   }
 }

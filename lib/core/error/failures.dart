@@ -22,6 +22,8 @@ class AuthFailure extends Failure {
   String toString() => 'Authentication failed - please login again';
 }
 
+class NotAuthenticatedFailure extends Failure {}
+
 class CacheFailure extends Failure {}
 
 class NetworkFailure extends Failure {}
@@ -32,4 +34,27 @@ class InvalidInputFailure extends Failure {
 
   @override
   String toString() => 'InvalidInputFailure: $message';
+}
+
+// Biometric-related failures
+class BiometricNotAvailableFailure extends Failure {
+  @override
+  String toString() =>
+      'Biometric authentication is not available on this device';
+}
+
+class BiometricAuthenticationFailure extends Failure {
+  @override
+  String toString() => 'Biometric authentication failed';
+}
+
+class NoStoredTokenFailure extends Failure {
+  @override
+  String toString() => 'No stored authentication token';
+}
+
+// Local storage failures
+class LocalStorageFailure extends Failure {
+  @override
+  String toString() => 'Local storage operation failed';
 }

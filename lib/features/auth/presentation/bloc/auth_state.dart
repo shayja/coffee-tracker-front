@@ -1,43 +1,79 @@
 // lib/features/auth/presentation/bloc/auth_state.dart
-//part of 'auth_bloc.dart';
+import 'package:equatable/equatable.dart';
 
-//@immutable
-abstract class AuthState {}
+abstract class AuthState extends Equatable {
+  const AuthState();
 
-class AuthInitial extends AuthState {}
+  @override
+  List<Object> get props => [];
+}
 
-class AuthLoading extends AuthState {}
+class AuthInitial extends AuthState {
+  const AuthInitial();
+}
 
-class AuthAuthenticated extends AuthState {}
+class AuthLoading extends AuthState {
+  const AuthLoading();
+}
 
-class AuthUnauthenticated extends AuthState {}
+class AuthAuthenticated extends AuthState {
+  final String token;
+
+  const AuthAuthenticated({required this.token});
+
+  @override
+  List<Object> get props => [token];
+}
+
+class AuthUnauthenticated extends AuthState {
+  const AuthUnauthenticated();
+}
 
 class OtpSent extends AuthState {
   final String mobile;
 
-  OtpSent({required this.mobile});
+  const OtpSent({required this.mobile});
+
+  @override
+  List<Object> get props => [mobile];
 }
 
 class OtpRequestFailed extends AuthState {
   final String message;
 
-  OtpRequestFailed({required this.message});
+  const OtpRequestFailed({required this.message});
+
+  @override
+  List<Object> get props => [message];
 }
 
 class OtpVerificationFailed extends AuthState {
   final String message;
 
-  OtpVerificationFailed({required this.message});
+  const OtpVerificationFailed({required this.message});
+
+  @override
+  List<Object> get props => [message];
 }
 
 class AuthError extends AuthState {
   final String message;
 
-  AuthError({required this.message});
+  const AuthError({required this.message});
+
+  @override
+  List<Object> get props => [message];
 }
 
 class InvalidMobileNumber extends AuthState {
   final String message;
 
-  InvalidMobileNumber({required this.message});
+  const InvalidMobileNumber({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class AuthBiometricNotAvailable extends AuthState {
+  const AuthBiometricNotAvailable();
 }

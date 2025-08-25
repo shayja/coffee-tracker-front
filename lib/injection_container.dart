@@ -1,6 +1,8 @@
 // lib/injection_container.dart
 
+import 'package:coffee_tracker/core/auth/biometric_service.dart';
 import 'package:coffee_tracker/core/config/app_config.dart';
+import 'package:coffee_tracker/features/auth/domain/usecases/biometric_login.dart';
 import 'package:coffee_tracker/features/auth/domain/usecases/logout.dart';
 import 'package:coffee_tracker/features/statistics/data/datasources/statistics_remote_data_source.dart';
 import 'package:coffee_tracker/features/statistics/data/repositories/statistics_repository_impl.dart';
@@ -91,6 +93,7 @@ Future<void> init() async {
       remoteDataSource: sl(),
       networkInfo: sl(),
       authService: sl(),
+      biometricService: sl(),
     ),
   );
 
@@ -121,6 +124,7 @@ Future<void> init() async {
       verifyOtp: sl(),
       isAuthenticated: sl(),
       logout: sl(),
+      biometricLogin: sl(),
     ),
   );
 
@@ -140,6 +144,12 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetStatistics(sl()));
 
   sl.registerFactory(() => StatisticsBloc(getStatistics: sl()));
+
+  //! Register BiometricService
+  sl.registerLazySingleton(() => BiometricService());
+
+  //! Register BiometricLogin use case (add this line)
+  sl.registerLazySingleton(() => BiometricLogin(sl()));
 }
 
 class ExpiredTokenRetryPolicy extends RetryPolicy {

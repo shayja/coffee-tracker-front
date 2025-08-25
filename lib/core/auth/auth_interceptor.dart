@@ -17,7 +17,7 @@ class AuthInterceptor implements InterceptorContract {
       return request;
     }
 
-    final token = await authService.accessToken;
+    final token = await authService.getAccessToken();
     if (token != null) {
       request.headers['Authorization'] = 'Bearer $token';
     }
@@ -48,7 +48,7 @@ class AuthInterceptor implements InterceptorContract {
       }
 
       // Get new token
-      final newToken = await authService.accessToken;
+      final newToken = await authService.getAccessToken();
       if (newToken == null) {
         return response; // No token available
       }

@@ -50,8 +50,21 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+     externalNativeBuild {
+        cmake {
+            // Set the path to your CMake version here
+            version = "4.1.0"
+        }
+    }
 }
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    implementation("androidx.biometric:biometric-ktx:1.4.0-alpha02")
+    implementation("androidx.appcompat:appcompat:1.7.1")
+    implementation("androidx.fragment:fragment:1.8.9")
 }

@@ -20,3 +20,5 @@ class VerifyOtpEvent extends AuthEvent {
 class CheckAuthenticationEvent extends AuthEvent {}
 
 class LogoutEvent extends AuthEvent {}
+
+class BiometricLoginEvent extends AuthEvent {}

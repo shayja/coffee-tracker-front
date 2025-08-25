@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "front (android Xiaomi Shay)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "8187b646"
+    }
+    // {
+    //   "name": "front (profile mode)",
+    //   "request": "launch",
+    //   "type": "dart",
+    //   "flutterMode": "profile",
+    //   "deviceId": "8187b646"
+    // },
+    // {
+    //   "name": "front (release mode)",
+    //   "request": "launch",
+    //   "type": "dart",
+    //   "flutterMode": "release",
+    //   "deviceId": "8187b646"
+    // }
+  ]
+}
