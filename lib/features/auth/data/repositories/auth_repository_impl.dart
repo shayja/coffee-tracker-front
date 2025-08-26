@@ -90,6 +90,9 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(BiometricNotAvailableFailure());
     }
 
+    print('=== BIOMETRIC LOGIN STARTED ===');
+    await authService.debugPrintStoredTokens(); // DEBUG
+
     // 2. Authenticate with biometrics
     print('Authenticating with biometrics...'); // DEBUG
     final authSuccess = await biometricService.authenticate();

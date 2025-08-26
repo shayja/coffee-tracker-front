@@ -141,4 +141,21 @@ class AuthService {
         return 'Failed to send OTP. Please try again.';
     }
   }
+
+  // Add this to your AuthService for debugging
+  Future<void> debugPrintStoredTokens() async {
+    final accessToken = await storage.read(key: _accessTokenKey);
+    final refreshToken = await storage.read(key: _refreshTokenKey);
+    final authToken = await storage.read(key: 'auth_token');
+
+    print('=== STORED TOKENS DEBUG ===');
+    print('Access Token: ${accessToken != null ? "EXISTS" : "NULL"}');
+    print('Refresh Token: ${refreshToken != null ? "EXISTS" : "NULL"}');
+    print('Legacy Auth Token: ${authToken != null ? "EXISTS" : "NULL"}');
+
+    if (accessToken != null) {
+      final isExpired = JwtDecoder.isExpired(accessToken);
+      print('Access Token Expired: $isExpired');
+    }
+  }
 }
