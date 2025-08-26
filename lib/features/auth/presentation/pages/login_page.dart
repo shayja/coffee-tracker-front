@@ -20,22 +20,61 @@ class _LoginPageState extends State<LoginPage> {
   final _otpController = TextEditingController();
   bool _otpSent = false;
   bool _biometricAvailable = false;
+  bool _biometricEnabled = false;
+  String? _currentMobile;
 
   @override
   void initState() {
     super.initState();
     // Check if user is already authenticated
     context.read<AuthBloc>().add(CheckAuthenticationEvent());
-    // Check if biometric is available
-    _checkBiometricAvailability();
+    // Check biometric status
+    _checkBiometricStatus();
   }
 
-  Future<void> _checkBiometricAvailability() async {
+  Future<void> _checkBiometricStatus() async {
     final biometricService = di.sl<BiometricService>();
     final isAvailable = await biometricService.isBiometricAvailable();
-    setState(() {
-      _biometricAvailable = isAvailable;
-    });
+    final isEnabled = await biometricService.isBiometricLoginEnabled();
+
+    if (mounted) {
+      setState(() {
+        _biometricAvailable = isAvailable;
+        _biometricEnabled = isEnabled;
+      });
+    }
+  }
+
+  void _showBiometricEnableDialog(String token) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Enable Biometric Login?'),
+        content: const Text(
+          'Would you like to enable fingerprint/face login for faster access?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Not Now'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              if (_currentMobile != null) {
+                context.read<AuthBloc>().add(
+                  EnableBiometricLoginEvent(
+                    mobile: _currentMobile!,
+                    token: token,
+                  ),
+                );
+              }
+            },
+            child: const Text('Enable'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -44,9 +83,17 @@ class _LoginPageState extends State<LoginPage> {
       appBar: AppBar(title: const Text('Login')),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthAuthenticated) {
-            // Navigate to main app
-            Navigator.pushReplacementNamed(context, '/coffee-tracker');
+          if (state is NavigateToHome) {
+            // ← Change this from AuthAuthenticated to NavigateToHome
+            // Store the mobile number
+            _currentMobile = _mobileController.text;
+
+            // Navigate safely using addPostFrameCallback
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                Navigator.pushReplacementNamed(context, '/coffee-tracker');
+              }
+            });
           } else if (state is OtpSent) {
             setState(() {
               _otpSent = true;
@@ -70,20 +117,6 @@ class _LoginPageState extends State<LoginPage> {
                 duration: const Duration(seconds: 5),
               ),
             );
-          } else if (state is AuthBiometricNotAvailable) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Biometric authentication not available'),
-                backgroundColor: Colors.orange,
-              ),
-            );
-          } else if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
           }
         },
         child: Padding(
@@ -91,8 +124,17 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Biometric Login Section (shown only when available and before OTP is sent)
-              if (_biometricAvailable && !_otpSent) ...[
+              // App Logo/Title
+              const Icon(Icons.coffee, size: 80, color: Colors.brown),
+              const SizedBox(height: 20),
+              const Text(
+                'Coffee Tracker ☕',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 30),
+
+              // Biometric Login Section
+              if (_biometricAvailable && _biometricEnabled) ...[
                 _buildBiometricSection(),
                 const SizedBox(height: 30),
                 const Divider(),
@@ -112,22 +154,32 @@ class _LoginPageState extends State<LoginPage> {
                   prefixText: '+',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.phone),
+                  hintText: 'Enter your mobile number',
                 ),
                 keyboardType: TextInputType.phone,
+                onChanged: (value) {
+                  // Update current mobile for biometric enablement
+                  _currentMobile = value;
+                },
               ),
               const SizedBox(height: 20),
 
               // OTP Input (shown only after OTP is sent)
               if (_otpSent)
-                TextField(
-                  controller: _otpController,
-                  decoration: const InputDecoration(
-                    labelText: 'OTP',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 300),
+                  child: TextField(
+                    controller: _otpController,
+                    decoration: const InputDecoration(
+                      labelText: 'OTP',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.lock),
+                      hintText: 'Enter 6-digit OTP',
+                    ),
+                    keyboardType: TextInputType.number,
+                    obscureText: true,
+                    maxLength: 6,
                   ),
-                  keyboardType: TextInputType.number,
-                  obscureText: true,
                 ),
 
               if (_otpSent) const SizedBox(height: 20),
@@ -135,50 +187,41 @@ class _LoginPageState extends State<LoginPage> {
               // Action Button
               BlocBuilder<AuthBloc, AuthState>(
                 builder: (context, state) {
-                  if (state is AuthLoading) {
-                    return const CircularProgressIndicator();
-                  }
+                  final isLoading = state is AuthLoading;
 
                   return ElevatedButton(
-                    onPressed: () {
-                      if (!_otpSent) {
-                        if (_mobileController.text.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please enter mobile number'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                          return;
-                        }
-                        context.read<AuthBloc>().add(
-                          RequestOtpEvent(_mobileController.text),
-                        );
-                      } else {
-                        if (_otpController.text.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please enter OTP'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                          return;
-                        }
-                        context.read<AuthBloc>().add(
-                          VerifyOtpEvent(
-                            mobile: _mobileController.text,
-                            otp: _otpController.text,
-                          ),
-                        );
-                      }
-                    },
+                    onPressed: isLoading
+                        ? null
+                        : () {
+                            if (!_otpSent) {
+                              _requestOtp();
+                            } else {
+                              _verifyOtp();
+                            }
+                          },
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 50),
+                      backgroundColor: Colors.brown,
+                      foregroundColor: Colors.white,
                     ),
-                    child: Text(_otpSent ? 'Verify OTP' : 'Send OTP'),
+                    child: isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Text(_otpSent ? 'Verify OTP' : 'Send OTP'),
                   );
                 },
               ),
+
+              // Reset OTP button
+              if (_otpSent)
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _otpSent = false;
+                      _otpController.clear();
+                    });
+                  },
+                  child: const Text('Change mobile number'),
+                ),
             ],
           ),
         ),
@@ -197,7 +240,7 @@ class _LoginPageState extends State<LoginPage> {
               return Column(
                 children: [
                   IconButton(
-                    iconSize: 50,
+                    iconSize: 60,
                     icon: _getBiometricIcon(biometricType),
                     onPressed: () {
                       context.read<AuthBloc>().add(BiometricLoginEvent());
@@ -211,17 +254,13 @@ class _LoginPageState extends State<LoginPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  const SizedBox(height: 5),
+                  const Text(
+                    'Tap to authenticate',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
                 ],
               );
-            }
-            return const SizedBox.shrink();
-          },
-        ),
-        const SizedBox(height: 10),
-        BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, state) {
-            if (state is AuthLoading) {
-              return const CircularProgressIndicator();
             }
             return const SizedBox.shrink();
           },
@@ -230,15 +269,45 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  void _requestOtp() {
+    if (_mobileController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter mobile number'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    context.read<AuthBloc>().add(RequestOtpEvent(_mobileController.text));
+  }
+
+  void _verifyOtp() {
+    if (_otpController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter OTP'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    context.read<AuthBloc>().add(
+      VerifyOtpEvent(mobile: _mobileController.text, otp: _otpController.text),
+    );
+  }
+
   Icon _getBiometricIcon(BiometricType type) {
     switch (type) {
       case BiometricType.face:
-        return const Icon(Icons.face, size: 50);
+        return const Icon(Icons.face, size: 50, color: Colors.brown);
       case BiometricType.iris:
-        return const Icon(Icons.remove_red_eye, size: 50);
+        return const Icon(Icons.remove_red_eye, size: 50, color: Colors.brown);
       case BiometricType.fingerprint:
       default:
-        return const Icon(Icons.fingerprint, size: 50);
+        return const Icon(Icons.fingerprint, size: 50, color: Colors.brown);
     }
   }
 

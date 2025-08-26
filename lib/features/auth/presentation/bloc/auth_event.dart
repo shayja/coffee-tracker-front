@@ -22,3 +22,12 @@ class CheckAuthenticationEvent extends AuthEvent {}
 class LogoutEvent extends AuthEvent {}
 
 class BiometricLoginEvent extends AuthEvent {}
+
+class EnableBiometricLoginEvent extends AuthEvent {
+  final String mobile;
+  final String token;
+
+  EnableBiometricLoginEvent({required this.mobile, required this.token});
+}
+
+class CheckBiometricStatusEvent extends AuthEvent {}

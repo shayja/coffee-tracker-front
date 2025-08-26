@@ -8,4 +8,8 @@ abstract class AuthRepository {
   Future<Either<Failure, String>> isAuthenticated();
   Future<Either<Failure, void>> logout();
   Future<Either<Failure, String>> biometricLogin();
+  Future<Either<Failure, void>> enableBiometricLogin(
+    String mobile,
+    String token,
+  );
 }

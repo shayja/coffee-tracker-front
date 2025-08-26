@@ -81,39 +81,47 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, String>> biometricLogin() async {
-    print('loginWithBiometrics called in repository'); // DEBUG
+    print('Biometric login called in repository');
 
-    // 1. First check if biometrics are available
-    final isAvailable = await biometricService.isBiometricAvailable();
-    if (!isAvailable) {
-      print('Biometrics not available'); // DEBUG
-      return Left(BiometricNotAvailableFailure());
-    }
-
-    print('=== BIOMETRIC LOGIN STARTED ===');
-    await authService.debugPrintStoredTokens(); // DEBUG
-
-    // 2. Authenticate with biometrics
-    print('Authenticating with biometrics...'); // DEBUG
-    final authSuccess = await biometricService.authenticate();
-    if (!authSuccess) {
-      print('Biometric authentication failed'); // DEBUG
-      return Left(BiometricAuthenticationFailure());
-    }
-
-    // 3. Retrieve stored token
-    print('Retrieving stored token...'); // DEBUG
     try {
-      final token = await authService.getAccessToken();
-      if (token == null) {
-        print('No stored token found'); // DEBUG
-        return Left(NoStoredTokenFailure());
+      // 1. Check if biometric login is enabled
+      final isEnabled = await biometricService.isBiometricLoginEnabled();
+      if (!isEnabled) {
+        print('Biometric login not enabled');
+        return Left(BiometricNotEnabledFailure());
       }
 
-      print('Token retrieved successfully: $token'); // DEBUG
+      // 2. Authenticate with biometrics and get stored token
+      print('Authenticating with biometrics...');
+      final token = await biometricService.authenticateAndGetToken();
+
+      if (token == null) {
+        print('Biometric authentication failed or no token found');
+        return Left(BiometricAuthenticationFailure());
+      }
+
+      // 3. Verify the token is still valid (optional)
+      // You could add a check here to see if the token is expired
+      // and attempt to refresh it if needed
+
+      print('Biometric login successful!');
       return Right(token);
     } catch (e) {
-      print('Error retrieving token: $e'); // DEBUG
+      print('Error in biometric login: $e');
+      return Left(LocalStorageFailure());
+    }
+  }
+
+  // Add this method to enable biometric login after successful OTP verification
+  @override
+  Future<Either<Failure, void>> enableBiometricLogin(
+    String mobile,
+    String token,
+  ) async {
+    try {
+      await biometricService.enableBiometricLogin(mobile, token);
+      return Right(null);
+    } catch (e) {
       return Left(LocalStorageFailure());
     }
   }

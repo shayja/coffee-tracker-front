@@ -77,3 +77,40 @@ class InvalidMobileNumber extends AuthState {
 class AuthBiometricNotAvailable extends AuthState {
   const AuthBiometricNotAvailable();
 }
+
+// Add these new states for biometric enablement
+class BiometricEnabled extends AuthState {
+  final String message;
+
+  const BiometricEnabled({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class BiometricEnableFailed extends AuthState {
+  final String message;
+
+  const BiometricEnableFailed({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class BiometricStatusChecked extends AuthState {
+  final bool isEnabled;
+  final bool isAvailable;
+
+  const BiometricStatusChecked({
+    required this.isEnabled,
+    required this.isAvailable,
+  });
+
+  @override
+  List<Object> get props => [isEnabled, isAvailable];
+}
+
+class NavigateToHome extends AuthState {
+  final String token;
+  const NavigateToHome({required this.token});
+}

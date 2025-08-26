@@ -3,6 +3,7 @@
 import 'package:coffee_tracker/core/auth/biometric_service.dart';
 import 'package:coffee_tracker/core/config/app_config.dart';
 import 'package:coffee_tracker/features/auth/domain/usecases/biometric_login.dart';
+import 'package:coffee_tracker/features/auth/domain/usecases/enable_biometric_login.dart';
 import 'package:coffee_tracker/features/auth/domain/usecases/logout.dart';
 import 'package:coffee_tracker/features/statistics/data/datasources/statistics_remote_data_source.dart';
 import 'package:coffee_tracker/features/statistics/data/repositories/statistics_repository_impl.dart';
@@ -60,10 +61,7 @@ Future<void> init() async {
 
   // HTTP Client with interceptor
   sl.registerLazySingleton(
-    () => InterceptedClient.build(
-      interceptors: [AuthInterceptor(sl())],
-      retryPolicy: ExpiredTokenRetryPolicy(),
-    ),
+    () => InterceptedClient.build(interceptors: [AuthInterceptor(sl())]),
   );
 
   //! Features - Coffee Tracker
@@ -107,6 +105,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => VerifyOtp(sl()));
   sl.registerLazySingleton(() => IsAuthenticated(sl()));
   sl.registerLazySingleton(() => Logout(sl()));
+  sl.registerLazySingleton(() => BiometricLogin(sl()));
+  sl.registerLazySingleton(() => EnableBiometricLogin(sl()));
 
   // Bloc (factory because we want new instance per screen)
   sl.registerFactory(
@@ -125,6 +125,7 @@ Future<void> init() async {
       isAuthenticated: sl(),
       logout: sl(),
       biometricLogin: sl(),
+      //enableBiometricLogin: sl(),
     ),
   );
 
@@ -147,14 +148,4 @@ Future<void> init() async {
 
   //! Register BiometricService
   sl.registerLazySingleton(() => BiometricService());
-
-  //! Register BiometricLogin use case (add this line)
-  sl.registerLazySingleton(() => BiometricLogin(sl()));
-}
-
-class ExpiredTokenRetryPolicy extends RetryPolicy {
-  @override
-  Future<bool> shouldAttemptRetryOnResponse(http.BaseResponse response) async {
-    return response.statusCode == 401;
-  }
 }

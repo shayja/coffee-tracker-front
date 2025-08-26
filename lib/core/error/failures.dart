@@ -43,6 +43,11 @@ class BiometricNotAvailableFailure extends Failure {
       'Biometric authentication is not available on this device';
 }
 
+class BiometricNotEnabledFailure extends Failure {
+  @override
+  String toString() => 'Biometric authentication is not enabled';
+}
+
 class BiometricAuthenticationFailure extends Failure {
   @override
   String toString() => 'Biometric authentication failed';

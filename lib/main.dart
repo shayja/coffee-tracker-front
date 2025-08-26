@@ -43,8 +43,8 @@ class CoffeeTrackerApp extends StatelessWidget {
           },
         ),
         routes: {
-          '/coffee-tracker': (context) => const CoffeeTrackerPage(),
-          '/login': (context) => const LoginPage(),
+          '/login': (context) => LoginPage(),
+          '/coffee-tracker': (context) => CoffeeTrackerPage(),
         },
       ),
     );

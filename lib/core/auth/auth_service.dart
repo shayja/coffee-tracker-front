@@ -17,11 +17,6 @@ class AuthService {
     required this.baseUrl,
   });
 
-  // is token expired
-  Future<bool> isTokenExpired(String token) async {
-    return JwtDecoder.isExpired(token);
-  }
-
   // Check if user is authenticated
   Future<bool> isAuthenticated() async {
     final token = await getAccessToken();
@@ -77,7 +72,17 @@ class AuthService {
   // Refresh token
   Future<bool> refreshToken() async {
     final refreshToken = await storage.read(key: _refreshTokenKey);
-    if (refreshToken == null) return false;
+    if (refreshToken == null) {
+      print('No refresh token available');
+      return false;
+    }
+
+    // Check if refresh token is expired
+    if (await isTokenExpired(refreshToken)) {
+      print('Refresh token expired');
+      await logout(); // Clear expired tokens
+      return false;
+    }
 
     try {
       final response = await client.post(
@@ -86,20 +91,42 @@ class AuthService {
         body: jsonEncode({'refresh_token': refreshToken}),
       );
 
+      print('Refresh response: ${response.statusCode}');
+
       if (response.statusCode == 200) {
         await _saveTokensFromResponse(response.body);
+        print('Token refresh successful');
         return true;
+      } else if (response.statusCode == 401) {
+        // Refresh token is invalid/expired
+        print('Refresh token invalid - logging out');
+        await logout();
+        return false;
       }
+
+      print('Refresh failed with status: ${response.statusCode}');
       return false;
     } catch (e) {
+      print('Refresh token error: $e');
       return false;
     }
   }
 
-  // Logout
+  // Enhanced token validation
+  Future<bool> isTokenExpired(String token) async {
+    try {
+      return JwtDecoder.isExpired(token);
+    } catch (e) {
+      print('Token validation error: $e');
+      return true; // Consider invalid tokens as expired
+    }
+  }
+
+  // Enhanced logout to clear all tokens
   Future<void> logout() async {
     await storage.delete(key: _accessTokenKey);
     await storage.delete(key: _refreshTokenKey);
+    print('All tokens cleared on logout');
   }
 
   // Get current access token
@@ -112,18 +139,24 @@ class AuthService {
     }
   }
 
-  // Future<void> saveAccessToken(String token) async {
-  //   await storage.write(key: _accessTokenKey, value: token);
-  // }
-
-  // Future<void> saveRefreshToken(String refreshToken) async {
-  //   await storage.write(key: _refreshTokenKey, value: refreshToken);
-  // }
-
   Future<void> _saveTokensFromResponse(String responseBody) async {
-    final json = jsonDecode(responseBody);
-    await storage.write(key: _accessTokenKey, value: json[_accessTokenKey]);
-    await storage.write(key: _refreshTokenKey, value: json[_refreshTokenKey]);
+    try {
+      final json = jsonDecode(responseBody);
+      final accessToken = json['access_token'];
+      final refreshToken = json['refresh_token'];
+
+      if (accessToken == null || refreshToken == null) {
+        throw Exception('Missing tokens in response');
+      }
+
+      await storage.write(key: _accessTokenKey, value: accessToken);
+      await storage.write(key: _refreshTokenKey, value: refreshToken);
+
+      print('Tokens saved successfully');
+    } catch (e) {
+      print('Error saving tokens: $e');
+      rethrow;
+    }
   }
 
   // Add this helper method
@@ -157,5 +190,36 @@ class AuthService {
       final isExpired = JwtDecoder.isExpired(accessToken);
       print('Access Token Expired: $isExpired');
     }
+  }
+
+  Future<void> debugAuthStatus() async {
+    final accessToken = await storage.read(key: _accessTokenKey);
+    final refreshToken = await storage.read(key: _refreshTokenKey);
+
+    print('=== AUTH STATUS DEBUG ===');
+    print('Access Token: ${accessToken != null ? "EXISTS" : "NULL"}');
+    print('Refresh Token: ${refreshToken != null ? "EXISTS" : "NULL"}');
+
+    if (accessToken != null) {
+      final accessExpired = await isTokenExpired(accessToken);
+      print('Access Token Expired: $accessExpired');
+      print(
+        'Access Token Expiry: ${JwtDecoder.getExpirationDate(accessToken)}',
+      );
+    }
+
+    if (refreshToken != null) {
+      final refreshExpired = await isTokenExpired(refreshToken);
+      print('Refresh Token Expired: $refreshExpired');
+      print(
+        'Refresh Token Expiry: ${JwtDecoder.getExpirationDate(refreshToken)}',
+      );
+    }
+    print('=========================');
+  }
+
+  // Call this method in your interceptor for debugging
+  Future<void> logTokenStatus() async {
+    await debugAuthStatus();
   }
 }
