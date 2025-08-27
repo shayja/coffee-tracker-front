@@ -1,5 +1,6 @@
 // lib/core/auth/auth_service.dart
 import 'dart:convert';
+import 'package:coffee_tracker/features/auth/data/models/auth_response_model.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:jwt_decoder/jwt_decoder.dart';
@@ -19,7 +20,7 @@ class AuthService {
 
   // Check if user is authenticated
   Future<bool> isAuthenticated() async {
-    final token = await getAccessToken();
+    final token = await getValidAccessToken();
     return token != null && !(await isTokenExpired(token));
   }
 
@@ -60,7 +61,7 @@ class AuthService {
       if (response.statusCode == 200) {
         await _saveTokensFromResponse(response.body);
 
-        return getAccessToken(); // Return the token
+        return getValidAccessToken(); // Return the token
       }
       return null;
     } catch (e) {
@@ -70,18 +71,18 @@ class AuthService {
   }
 
   // Refresh token
-  Future<bool> refreshToken() async {
+  Future<String?> refreshToken() async {
     final refreshToken = await storage.read(key: _refreshTokenKey);
     if (refreshToken == null) {
       print('No refresh token available');
-      return false;
+      return null;
     }
 
     // Check if refresh token is expired
     if (await isTokenExpired(refreshToken)) {
       print('Refresh token expired');
       await logout(); // Clear expired tokens
-      return false;
+      return null;
     }
 
     try {
@@ -94,21 +95,21 @@ class AuthService {
       print('Refresh response: ${response.statusCode}');
 
       if (response.statusCode == 200) {
-        await _saveTokensFromResponse(response.body);
+        final res = await _saveTokensFromResponse(response.body);
         print('Token refresh successful');
-        return true;
+        return res.refreshToken;
       } else if (response.statusCode == 401) {
         // Refresh token is invalid/expired
         print('Refresh token invalid - logging out');
         await logout();
-        return false;
+        return null;
       }
 
       print('Refresh failed with status: ${response.statusCode}');
-      return false;
+      return null;
     } catch (e) {
       print('Refresh token error: $e');
-      return false;
+      return null;
     }
   }
 
@@ -130,7 +131,7 @@ class AuthService {
   }
 
   // Get current access token
-  Future<String?> getAccessToken() async {
+  Future<String?> getValidAccessToken() async {
     try {
       return await storage.read(key: _accessTokenKey);
     } catch (e) {
@@ -139,20 +140,17 @@ class AuthService {
     }
   }
 
-  Future<void> _saveTokensFromResponse(String responseBody) async {
+  Future<AuthResponseTokenModel> _saveTokensFromResponse(
+    String responseBody,
+  ) async {
     try {
-      final json = jsonDecode(responseBody);
-      final accessToken = json['access_token'];
-      final refreshToken = json['refresh_token'];
+      final jsonResponse = jsonDecode(responseBody);
+      final entity = AuthResponseTokenModel.fromJson(jsonResponse);
 
-      if (accessToken == null || refreshToken == null) {
-        throw Exception('Missing tokens in response');
-      }
-
-      await storage.write(key: _accessTokenKey, value: accessToken);
-      await storage.write(key: _refreshTokenKey, value: refreshToken);
-
+      await storage.write(key: _accessTokenKey, value: entity.accessToken);
+      await storage.write(key: _refreshTokenKey, value: entity.refreshToken);
       print('Tokens saved successfully');
+      return entity;
     } catch (e) {
       print('Error saving tokens: $e');
       rethrow;

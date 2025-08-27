@@ -19,3 +19,20 @@ class AuthResponseModel {
     );
   }
 }
+
+class AuthResponseTokenModel {
+  final String accessToken;
+  final String refreshToken;
+
+  AuthResponseTokenModel({
+    required this.accessToken,
+    required this.refreshToken,
+  });
+
+  factory AuthResponseTokenModel.fromJson(Map<String, dynamic> json) {
+    return AuthResponseTokenModel(
+      accessToken: json['access_token'],
+      refreshToken: json['refresh_token'],
+    );
+  }
+}

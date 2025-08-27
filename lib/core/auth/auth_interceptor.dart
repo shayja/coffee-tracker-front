@@ -1,27 +1,27 @@
 // lib/core/auth/auth_interceptor.dart
+import 'dart:async';
 import 'package:coffee_tracker/core/auth/auth_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_interceptor/http_interceptor.dart';
 
 class AuthInterceptor implements InterceptorContract {
-  final AuthService authService;
+  final AuthService _authService;
   bool _isRefreshing = false;
-  final List<http.BaseRequest> _pendingRequests = [];
+  final List<_PendingRequest> _pendingRequests = [];
 
-  AuthInterceptor(this.authService);
+  AuthInterceptor(this._authService);
 
   @override
   Future<http.BaseRequest> interceptRequest({
     required http.BaseRequest request,
   }) async {
-    // Skip adding token for auth endpoints (except refresh)
-    if (request.url.path.contains('/auth') &&
-        !request.url.path.contains('/auth/refresh')) {
+    // Skip login/register endpoints
+    if (request.url.path.startsWith('/auth') &&
+        !request.url.path.endsWith('/refresh')) {
       return request;
     }
 
-    // Add Authorization header if token exists
-    final token = await authService.getAccessToken();
+    final token = await _authService.getValidAccessToken();
     if (token != null) {
       request.headers['Authorization'] = 'Bearer $token';
     }
@@ -32,82 +32,77 @@ class AuthInterceptor implements InterceptorContract {
   Future<http.BaseResponse> interceptResponse({
     required http.BaseResponse response,
   }) async {
-    // Log token status for 401 errors
-    if (response.statusCode == 401) {
-      await authService.logTokenStatus();
-    }
-
-    // Only handle 401 Unauthorized responses
-    if (response.statusCode != 401) {
-      return response;
-    }
-
-    // Prevent multiple simultaneous refresh attempts
-    if (_isRefreshing) {
-      _pendingRequests.add(response.request!);
-      return response; // Will be retried after refresh completes
-    }
-
-    _isRefreshing = true;
-
-    try {
-      // Attempt to refresh token
-      final refreshed = await authService.refreshToken();
-      if (!refreshed) {
-        _isRefreshing = false;
-        return response; // Refresh failed
-      }
-
-      // Get new token
-      final newToken = await authService.getAccessToken();
-      if (newToken == null) {
-        _isRefreshing = false;
-        return response; // No token available
-      }
-
-      // Retry all pending requests with new token
-      for (final pendingRequest in _pendingRequests) {
-        final newRequest = _cloneRequestWithToken(pendingRequest, newToken);
-        await http.Client().send(newRequest);
-      }
-
-      // Clear pending requests
-      _pendingRequests.clear();
-
-      // Retry the original request
+    // Handle only http.Response objects
+    if (response is http.Response && response.statusCode == 401) {
       final originalRequest = response.request!;
-      final newRequest = _cloneRequestWithToken(originalRequest, newToken);
+      final completer = Completer<http.Response>();
 
-      final newResponse = await http.Client()
-          .send(newRequest)
-          .then(http.Response.fromStream);
+      _pendingRequests.add(_PendingRequest(originalRequest, completer));
 
-      _isRefreshing = false;
-      return newResponse;
-    } catch (e) {
-      _isRefreshing = false;
-      _pendingRequests.clear();
-      return response; // Return original response if anything fails
+      if (!_isRefreshing) {
+        _isRefreshing = true;
+        try {
+          final newToken = await _authService.refreshToken();
+          if (newToken != null) {
+            // Retry all pending requests with new token
+            for (final pending in _pendingRequests) {
+              final retriedRequest = await _cloneRequestWithToken(
+                pending.request,
+                newToken,
+              );
+              try {
+                final retriedResponse = await http.Response.fromStream(
+                  await http.Client().send(retriedRequest),
+                );
+                pending.completer.complete(retriedResponse);
+              } catch (e) {
+                pending.completer.completeError(e);
+              }
+            }
+          } else {
+            // Refresh failed → logout
+            await _authService.logout();
+            for (final pending in _pendingRequests) {
+              pending.completer.completeError(
+                Exception('Session expired. Please log in again.'),
+              );
+            }
+          }
+        } finally {
+          _isRefreshing = false;
+          _pendingRequests.clear();
+        }
+      }
+
+      return completer.future;
     }
+
+    return response;
   }
 
-  http.BaseRequest _cloneRequestWithToken(
-    http.BaseRequest original,
+  @override
+  FutureOr<bool> shouldInterceptRequest() => true;
+
+  @override
+  FutureOr<bool> shouldInterceptResponse() => true;
+
+  Future<http.Request> _cloneRequestWithToken(
+    http.BaseRequest request,
     String token,
-  ) {
-    final newRequest = http.Request(original.method, original.url)
-      ..headers.addAll({...original.headers, 'Authorization': 'Bearer $token'});
+  ) async {
+    final newRequest = http.Request(request.method, request.url);
+    newRequest.headers.addAll(request.headers);
+    newRequest.headers['Authorization'] = 'Bearer $token';
 
-    if (original is http.Request) {
-      newRequest.bodyBytes = original.bodyBytes;
+    if (request is http.Request) {
+      newRequest.bodyBytes = request.bodyBytes;
     }
-
     return newRequest;
   }
+}
 
-  @override
-  Future<bool> shouldInterceptRequest() async => true;
-
-  @override
-  Future<bool> shouldInterceptResponse() async => true;
+class _PendingRequest {
+  final http.BaseRequest request;
+  final Completer<http.Response> completer;
+  _PendingRequest(this.request, this.completer);
 }
