@@ -1,5 +1,6 @@
 // lib/features/auth/presentation/bloc/auth_bloc.dart
 
+import 'package:coffee_tracker/core/auth/auth_service.dart';
 import 'package:coffee_tracker/core/error/failures.dart';
 import 'package:coffee_tracker/core/usecases/usecase.dart';
 import 'package:coffee_tracker/features/auth/domain/usecases/biometric_login.dart';
@@ -20,6 +21,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final Logout logout;
   final BiometricLogin biometricLogin;
   final EnableBiometricLogin enableBiometricLogin;
+  final AuthService authService;
 
   AuthBloc({
     required this.requestOtp,
@@ -28,6 +30,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.logout,
     required this.biometricLogin,
     required this.enableBiometricLogin,
+    required this.authService,
   }) : super(AuthInitial()) {
     on<RequestOtpEvent>(_onRequestOtp);
     on<VerifyOtpEvent>(_onVerifyOtp);
@@ -137,34 +140,69 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final result = await biometricLogin(NoParams());
       debugPrint('biometricLogin result: $result');
 
-      result.fold(
-        (failure) {
-          debugPrint('Biometric login failed: $failure');
-          if (failure is BiometricNotAvailableFailure) {
-            emit(AuthBiometricNotAvailable());
-          } else if (failure is NoStoredTokenFailure) {
-            emit(AuthUnauthenticated());
-          } else if (failure is BiometricAuthenticationFailure) {
-            emit(AuthError(message: 'Biometric authentication failed'));
-          } else if (failure is LocalStorageFailure) {
-            emit(AuthError(message: 'Local storage error'));
-          } else {
-            emit(AuthError(message: 'Unexpected error: ${failure.toString()}'));
-          }
-        },
-        (token) {
-          debugPrint('Biometric login successful! Token: $token');
+      // Handle the result using if-else instead of fold to avoid async callback issues
+      if (result.isLeft()) {
+        // Handle failure case
+        final failure = result.fold((l) => l, (r) => null)!;
+        debugPrint('Biometric login failed: $failure');
+        
+        if (failure is BiometricNotAvailableFailure) {
+          emit(AuthBiometricNotAvailable());
+        } else if (failure is NoStoredTokenFailure) {
+          emit(AuthUnauthenticated());
+        } else if (failure is BiometricAuthenticationFailure) {
+          emit(AuthError(message: 'Biometric authentication failed'));
+        } else if (failure is LocalStorageFailure) {
+          emit(AuthError(message: 'Local storage error'));
+        } else {
+          emit(AuthError(message: 'Unexpected error: ${failure.toString()}'));
+        }
+      } else {
+        // Handle success case
+        final token = result.fold((l) => null, (r) => r)!;
+        debugPrint('Biometric login successful! Token: $token');
 
-          // Emit a special state for the UI to respond
-          emit(
-            BiometricLoginSuccess(
-              mobile: event.mobile,
-              token: token.accessToken,
-              refreshToken: token.refreshToken,
-            ),
-          );
-        },
-      );
+        try {
+          // Save tokens to main AuthService storage for app-wide use
+          await authService.storage.write(key: 'access_token', value: token.accessToken);
+          await authService.storage.write(key: 'refresh_token', value: token.refreshToken);
+          debugPrint('Tokens saved to main AuthService storage');
+
+          // Check if access token is expired and refresh if needed
+          final isExpired = await authService.isTokenExpired(token.accessToken);
+          if (isExpired) {
+            debugPrint('Access token expired, attempting refresh...');
+            final refreshedToken = await authService.refreshToken();
+            if (refreshedToken != null) {
+              debugPrint('Token refreshed successfully');
+              // Get the updated access token
+              final newAccessToken = await authService.getValidAccessToken();
+              emit(
+                BiometricLoginSuccess(
+                  mobile: event.mobile,
+                  token: newAccessToken ?? token.accessToken,
+                  refreshToken: refreshedToken,
+                ),
+              );
+            } else {
+              debugPrint('Token refresh failed');
+              emit(AuthError(message: 'Session expired. Please login again.'));
+            }
+          } else {
+            // Emit success state with valid tokens
+            emit(
+              BiometricLoginSuccess(
+                mobile: event.mobile,
+                token: token.accessToken,
+                refreshToken: token.refreshToken,
+              ),
+            );
+          }
+        } catch (e) {
+          debugPrint('Error saving tokens: $e');
+          emit(AuthError(message: 'Failed to save authentication data'));
+        }
+      }
     } catch (e) {
       debugPrint('Exception in _onBiometricLogin: $e');
       emit(AuthError(message: 'Unexpected error during biometric login'));

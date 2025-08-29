@@ -126,6 +126,7 @@ Future<void> init() async {
       logout: sl(),
       biometricLogin: sl(),
       enableBiometricLogin: sl(),
+      authService: sl(),
     ),
   );
 

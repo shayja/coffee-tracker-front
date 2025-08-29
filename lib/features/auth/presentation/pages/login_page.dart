@@ -33,50 +33,20 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _checkBiometricStatus() async {
     final biometricService = di.sl<BiometricService>();
     final isAvailable = await biometricService.isBiometricAvailable();
-    final isEnabled = await biometricService.isBiometricLoginEnabled();
+    final hasAnyBiometricUser = await biometricService.hasAnyBiometricUser();
+    final persistentMobile = await biometricService.getPersistentMobile();
+
     if (!mounted) return;
 
     setState(() {
       _biometricAvailable = isAvailable;
-      _biometricEnabled = isEnabled;
+      _biometricEnabled = hasAnyBiometricUser;
+      // Pre-fill mobile if we have a persistent mobile from previous biometric setup
+      if (persistentMobile != null && _mobileController.text.isEmpty) {
+        _mobileController.text = persistentMobile;
+        _currentMobile = persistentMobile;
+      }
     });
-  }
-
-  void _showBiometricEnableDialog(
-    String mobile,
-    String token,
-    String refreshToken,
-  ) {
-    if (!mounted || mobile.isEmpty) return;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Enable Biometric Login?'),
-        content: const Text(
-          'Would you like to enable fingerprint/face login for faster access?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Not Now'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              context.read<AuthBloc>().add(
-                EnableBiometricLoginEvent(
-                  mobile: mobile,
-                  token: token,
-                  refreshToken: refreshToken,
-                ),
-              );
-            },
-            child: const Text('Enable'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -86,46 +56,14 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (!mounted) return;
-
           if (state is NavigateToHome) {
-            // Use mobile from state if valid, otherwise fallback to current input
-            // final mobile = state.mobile?.trim().isNotEmpty == true
-            //     ? state.mobile!
-            //     : (_currentMobile ?? '');
-            // final token = state.token;
-            // final refreshToken = state.refreshToken ?? '';
-
-            WidgetsBinding.instance.addPostFrameCallback((_) {
+            WidgetsBinding.instance.addPostFrameCallback((_) async {
               if (!mounted) return;
               Navigator.pushReplacementNamed(context, '/coffee-tracker');
-
-              // if (_biometricAvailable &&
-              //     _biometricEnabled &&
-              //     mobile.isNotEmpty) {
-              //   _showBiometricEnableDialog(mobile, token, refreshToken);
-              // }
             });
           } else if (state is BiometricLoginSuccess) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               Navigator.pushReplacementNamed(context, '/coffee-tracker');
-            });
-
-            final mobile = state.mobile;
-            final token = state.token;
-            final refreshToken = state.refreshToken;
-            if (_biometricAvailable && _biometricEnabled && mobile.isNotEmpty) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _showBiometricEnableDialog(mobile, token, refreshToken);
-              });
-            }
-          } else if (state is ShowBiometricEnableDialog) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-              _showBiometricEnableDialog(
-                state.mobile,
-                state.token,
-                state.refreshToken,
-              );
             });
           } else if (state is OtpSent) {
             setState(() => _otpSent = true);

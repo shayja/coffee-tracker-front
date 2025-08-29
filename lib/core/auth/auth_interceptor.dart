@@ -1,8 +1,11 @@
 // lib/core/auth/auth_interceptor.dart
 import 'dart:async';
 import 'package:coffee_tracker/core/auth/auth_service.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_interceptor/http_interceptor.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class AuthInterceptor implements InterceptorContract {
   final AuthService _authService;
@@ -67,6 +70,10 @@ class AuthInterceptor implements InterceptorContract {
                 Exception('Session expired. Please log in again.'),
               );
             }
+            navigatorKey.currentState?.pushNamedAndRemoveUntil(
+              '/login',
+              (route) => false,
+            );
           }
         } finally {
           _isRefreshing = false;

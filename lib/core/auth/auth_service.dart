@@ -12,6 +12,7 @@ class AuthService {
   final String baseUrl;
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
+  static const String _userMobileKey = 'user_mobile'; // Store user mobile persistently
 
   AuthService({
     required this.client,
@@ -64,6 +65,8 @@ class AuthService {
 
       if (response.statusCode == 200) {
         await _saveTokensFromResponse(response.body);
+        // Store mobile number for biometric setup
+        await _storeMobile(mobile);
 
         return getValidAccessToken(); // Return the token
       }
@@ -169,6 +172,69 @@ class AuthService {
     await storage.write(key: 'biometric_mobile', value: mobile);
     await storage.write(key: 'biometric_access_token', value: accessToken);
     await storage.write(key: 'biometric_refresh_token', value: refreshToken);
+  }
+
+  // Store mobile number persistently
+  Future<void> _storeMobile(String mobile) async {
+    try {
+      await storage.write(key: _userMobileKey, value: mobile);
+      debugPrint('Mobile number stored: $mobile');
+    } catch (e) {
+      debugPrint('Error storing mobile: $e');
+    }
+  }
+
+  // Get stored mobile number
+  Future<String?> getUserMobile() async {
+    try {
+      return await storage.read(key: _userMobileKey);
+    } catch (e) {
+      debugPrint('Error getting stored mobile: $e');
+      return null;
+    }
+  }
+
+  // Extract mobile from JWT token
+  Future<String?> getMobileFromToken() async {
+    try {
+      final token = await getValidAccessToken();
+      if (token == null) return null;
+
+      final decodedToken = JwtDecoder.decode(token);
+      // Try different possible field names for mobile in JWT
+      final mobile = decodedToken['mobile'] ?? 
+                    decodedToken['phone'] ?? 
+                    decodedToken['phoneNumber'] ?? 
+                    decodedToken['sub']; // 'sub' is often used for user identifier
+      
+      debugPrint('Mobile extracted from JWT: $mobile');
+      return mobile?.toString();
+    } catch (e) {
+      debugPrint('Error extracting mobile from token: $e');
+      return null;
+    }
+  }
+
+  // Get mobile number from any available source
+  Future<String?> getCurrentUserMobile() async {
+    // First try stored mobile
+    String? mobile = await getUserMobile();
+    if (mobile != null) {
+      debugPrint('Mobile found in storage: $mobile');
+      return mobile;
+    }
+
+    // Fallback to JWT token
+    mobile = await getMobileFromToken();
+    if (mobile != null) {
+      debugPrint('Mobile found in JWT: $mobile');
+      // Store it for future use
+      await _storeMobile(mobile);
+      return mobile;
+    }
+
+    debugPrint('No mobile number found');
+    return null;
   }
 
   // Add this helper method

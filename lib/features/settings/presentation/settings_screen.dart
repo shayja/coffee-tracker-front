@@ -2,6 +2,9 @@
 import 'package:coffee_tracker/core/auth/auth_service.dart';
 import 'package:coffee_tracker/core/auth/biometric_service.dart';
 import 'package:coffee_tracker/features/auth/presentation/pages/login_page.dart';
+import 'package:coffee_tracker/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:coffee_tracker/features/auth/presentation/bloc/auth_event.dart';
+import 'package:coffee_tracker/features/auth/presentation/bloc/auth_state.dart';
 import 'package:coffee_tracker/features/statistics/presentation/bloc/statistics_bloc.dart';
 import 'package:coffee_tracker/features/statistics/presentation/pages/statistics_page.dart';
 import 'package:coffee_tracker/injection_container.dart' as di;
@@ -16,8 +19,9 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final BiometricService _biometricService = BiometricService();
   bool _biometricEnabled = false;
+  bool _biometricAvailable = false;
+  String? _persistentMobile;
 
   @override
   void initState() {
@@ -26,26 +30,78 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadBiometricStatus() async {
-    final enabled = await _biometricService.isBiometricLoginEnabled();
-    setState(() => _biometricEnabled = enabled);
+    final biometricService = di.sl<BiometricService>();
+    final enabled = await biometricService.isBiometricLoginEnabled();
+    final available = await biometricService.isBiometricAvailable();
+    final mobile = await biometricService.getPersistentMobile();
+    
+    if (mounted) {
+      setState(() {
+        _biometricEnabled = enabled;
+        _biometricAvailable = available;
+        _persistentMobile = mobile;
+      });
+    }
   }
 
   Future<void> _toggleBiometric(bool value) async {
+    final biometricService = di.sl<BiometricService>();
+    final authService = di.sl<AuthService>();
+    
     if (value) {
+      // Get current tokens from AuthService
+      final accessToken = await authService.getValidAccessToken();
+      final refreshToken = await authService.storage.read(key: 'refresh_token');
+      
+      if (accessToken == null || refreshToken == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please login first to enable biometric authentication'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+      
+      // Get mobile number from AuthService (tries multiple sources)
+      final mobile = await authService.getCurrentUserMobile();
+      
+      if (mobile == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to determine user mobile number. Please logout and login again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+      
       // Authenticate with fingerprint/face before enabling
-      final success = await _biometricService.authenticate();
+      final success = await biometricService.authenticate();
       if (success) {
-        // Normally, get this from your AuthBloc/AuthService
-        final mobile = "user_mobile"; // fetch actual logged-in user mobile
-        final token = "access_token"; // fetch actual access token
-        final refresh = "refresh_token"; // fetch actual refresh token
-
-        await _biometricService.enableBiometricLogin(mobile, token, refresh);
-        setState(() => _biometricEnabled = true);
+        await biometricService.enableBiometricLogin(mobile, accessToken, refreshToken);
+        setState(() {
+          _biometricEnabled = true;
+          _persistentMobile = mobile; // Update the displayed mobile
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Biometric login enabled successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
     } else {
-      await _biometricService.disableBiometricLogin();
+      await biometricService.disableBiometricLogin();
       setState(() => _biometricEnabled = false);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Biometric login disabled'),
+          backgroundColor: Colors.orange,
+        ),
+      );
     }
   }
 
@@ -55,13 +111,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(title: const Text("⚙️ Settings")),
       body: ListView(
         children: [
-          SwitchListTile(
-            secondary: const Icon(Icons.fingerprint),
-            title: const Text("Biometric Login"),
-            subtitle: const Text("Enable or disable fingerprint/face login"),
-            value: _biometricEnabled,
-            onChanged: _toggleBiometric,
-          ),
+          // Biometric Login Section
+          if (_biometricAvailable) ...[
+            SwitchListTile(
+              secondary: const Icon(Icons.fingerprint),
+              title: const Text("Biometric Login"),
+              subtitle: Text(_biometricEnabled 
+                ? "Biometric login is enabled" 
+                : "Enable fingerprint/face login for faster access"),
+              value: _biometricEnabled,
+              onChanged: _toggleBiometric,
+            ),
+            if (_persistentMobile != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  "Configured for: $_persistentMobile",
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ),
+          ] else ...[
+            ListTile(
+              leading: Icon(Icons.fingerprint, color: Colors.grey[400]),
+              title: const Text("Biometric Login"),
+              subtitle: const Text("Biometric hardware not available on this device"),
+              enabled: false,
+            ),
+          ],
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.bar_chart),
             title: const Text("Stats"),

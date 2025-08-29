@@ -1,15 +1,10 @@
 // coffee_tracker/lib/features/coffee_tracker/presentation/pages/coffee_tracker_page.dart
-import 'package:coffee_tracker/core/auth/auth_service.dart';
 import 'package:coffee_tracker/core/widgets/app_scaffold.dart';
-import 'package:coffee_tracker/features/auth/presentation/pages/login_page.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_state.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/add_coffee_button.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/coffee_log_list.dart';
-import 'package:coffee_tracker/features/statistics/presentation/bloc/statistics_bloc.dart';
-import 'package:coffee_tracker/features/statistics/presentation/pages/statistics_page.dart';
-import 'package:coffee_tracker/injection_container.dart' as di;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
