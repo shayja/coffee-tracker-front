@@ -2,24 +2,35 @@
 import 'package:coffee_tracker/core/auth/auth_service.dart';
 import 'package:coffee_tracker/core/auth/biometric_service.dart';
 import 'package:coffee_tracker/features/auth/presentation/pages/login_page.dart';
-import 'package:coffee_tracker/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:coffee_tracker/features/auth/presentation/bloc/auth_event.dart';
-import 'package:coffee_tracker/features/auth/presentation/bloc/auth_state.dart';
+import 'package:coffee_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:coffee_tracker/features/settings/presentation/bloc/settings_event.dart';
+import 'package:coffee_tracker/features/settings/presentation/bloc/settings_state.dart';
 import 'package:coffee_tracker/features/statistics/presentation/bloc/statistics_bloc.dart';
 import 'package:coffee_tracker/features/statistics/presentation/pages/statistics_page.dart';
 import 'package:coffee_tracker/injection_container.dart' as di;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends StatelessWidget {
   const SettingsScreen({Key? key}) : super(key: key);
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => di.sl<SettingsBloc>()..add(LoadSettings()),
+      child: const _SettingsScreenContent(),
+    );
+  }
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
-  bool _biometricEnabled = false;
+class _SettingsScreenContent extends StatefulWidget {
+  const _SettingsScreenContent();
+
+  @override
+  State<_SettingsScreenContent> createState() => _SettingsScreenContentState();
+}
+
+class _SettingsScreenContentState extends State<_SettingsScreenContent> {
   bool _biometricAvailable = false;
   String? _persistentMobile;
 
@@ -31,60 +42,70 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadBiometricStatus() async {
     final biometricService = di.sl<BiometricService>();
-    final enabled = await biometricService.isBiometricLoginEnabled();
     final available = await biometricService.isBiometricAvailable();
     final mobile = await biometricService.getPersistentMobile();
-    
+
     if (mounted) {
       setState(() {
-        _biometricEnabled = enabled;
         _biometricAvailable = available;
         _persistentMobile = mobile;
       });
     }
   }
 
-  Future<void> _toggleBiometric(bool value) async {
+  Future<void> _toggleBiometric(bool value, bool currentBackendValue) async {
     final biometricService = di.sl<BiometricService>();
     final authService = di.sl<AuthService>();
-    
+
     if (value) {
       // Get current tokens from AuthService
       final accessToken = await authService.getValidAccessToken();
       final refreshToken = await authService.storage.read(key: 'refresh_token');
-      
+
       if (accessToken == null || refreshToken == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Please login first to enable biometric authentication'),
+            content: Text(
+              'Please login first to enable biometric authentication',
+            ),
             backgroundColor: Colors.red,
           ),
         );
         return;
       }
-      
+
       // Get mobile number from AuthService (tries multiple sources)
       final mobile = await authService.getCurrentUserMobile();
-      
+
       if (mobile == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Unable to determine user mobile number. Please logout and login again.'),
+            content: Text(
+              'Unable to determine user mobile number. Please logout and login again.',
+            ),
             backgroundColor: Colors.red,
           ),
         );
         return;
       }
-      
+
       // Authenticate with fingerprint/face before enabling
       final success = await biometricService.authenticate();
       if (success) {
-        await biometricService.enableBiometricLogin(mobile, accessToken, refreshToken);
+        await biometricService.enableBiometricLogin(
+          mobile,
+          accessToken,
+          refreshToken,
+        );
         setState(() {
-          _biometricEnabled = true;
           _persistentMobile = mobile; // Update the displayed mobile
         });
-        
+
+        // Update backend setting
+        context.read<SettingsBloc>().add(
+          UpdateSettingEvent(key: 'BiometricEnabled', value: true),
+        );
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Biometric login enabled successfully'),
@@ -94,8 +115,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     } else {
       await biometricService.disableBiometricLogin();
-      setState(() => _biometricEnabled = false);
-      
+
+      // Update backend setting
+      context.read<SettingsBloc>().add(
+        UpdateSettingEvent(key: 'BiometricEnabled', value: false),
+      );
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Biometric login disabled'),
@@ -109,85 +134,151 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("⚙️ Settings")),
-      body: ListView(
-        children: [
-          // Biometric Login Section
-          if (_biometricAvailable) ...[
-            SwitchListTile(
-              secondary: const Icon(Icons.fingerprint),
-              title: const Text("Biometric Login"),
-              subtitle: Text(_biometricEnabled 
-                ? "Biometric login is enabled" 
-                : "Enable fingerprint/face login for faster access"),
-              value: _biometricEnabled,
-              onChanged: _toggleBiometric,
-            ),
-            if (_persistentMobile != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  "Configured for: $_persistentMobile",
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-                ),
+      body: BlocConsumer<SettingsBloc, SettingsState>(
+        listener: (context, state) {
+          if (state is SettingsError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error: ${state.message}'),
+                backgroundColor: Colors.red,
               ),
-          ] else ...[
-            ListTile(
-              leading: Icon(Icons.fingerprint, color: Colors.grey[400]),
-              title: const Text("Biometric Login"),
-              subtitle: const Text("Biometric hardware not available on this device"),
-              enabled: false,
-            ),
-          ],
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.bar_chart),
-            title: const Text("Stats"),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => BlocProvider.value(
-                    value: BlocProvider.of<StatisticsBloc>(context),
-                    child: const StatisticsPage(),
-                  ),
-                ),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text("Logout"),
-            onTap: () async {
-              final shouldLogout = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Logout'),
-                  content: const Text('Are you sure you want to logout?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Logout'),
-                    ),
-                  ],
-                ),
-              );
+            );
+          }
+        },
+        builder: (context, state) {
+          if (state is SettingsLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-              if (shouldLogout == true) {
-                await di.sl<AuthService>().logout();
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                  (route) => false,
-                );
-              }
-            },
-          ),
-        ],
+          if (state is SettingsError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                  const SizedBox(height: 16),
+                  Text('Failed to load settings'),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () =>
+                        context.read<SettingsBloc>().add(LoadSettings()),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final settings = state is SettingsLoaded
+              ? state.settings
+              : state is SettingsUpdating
+              ? state.settings
+              : null;
+
+          if (settings == null) {
+            return const Center(child: Text('No settings available'));
+          }
+
+          final isUpdating = state is SettingsUpdating;
+
+          return ListView(
+            children: [
+              // Biometric Login Section
+              if (_biometricAvailable) ...[
+                SwitchListTile(
+                  secondary:
+                      isUpdating && state.updatingKey == 'BiometricEnabled'
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.fingerprint),
+                  title: const Text("Biometric Login"),
+                  subtitle: Text(
+                    settings.biometricEnabled
+                        ? "Biometric login is enabled"
+                        : "Enable fingerprint/face login for faster access",
+                  ),
+                  value: settings.biometricEnabled,
+                  onChanged:
+                      isUpdating && state.updatingKey == 'BiometricEnabled'
+                      ? null
+                      : (value) =>
+                            _toggleBiometric(value, settings.biometricEnabled),
+                ),
+                if (_persistentMobile != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      "Configured for: $_persistentMobile",
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                    ),
+                  ),
+              ] else ...[
+                ListTile(
+                  leading: Icon(Icons.fingerprint, color: Colors.grey[400]),
+                  title: const Text("Biometric Login"),
+                  subtitle: const Text(
+                    "Biometric hardware not available on this device",
+                  ),
+                  enabled: false,
+                ),
+              ],
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.bar_chart),
+                title: const Text("Stats"),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BlocProvider.value(
+                        value: BlocProvider.of<StatisticsBloc>(context),
+                        child: const StatisticsPage(),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: const Text("Logout"),
+                onTap: () async {
+                  final shouldLogout = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Logout'),
+                      content: const Text('Are you sure you want to logout?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('Logout'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (shouldLogout == true) {
+                    await di.sl<AuthService>().logout();
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (context) => const LoginPage(),
+                      ),
+                      (route) => false,
+                    );
+                  }
+                },
+              ),
+            ],
+          );
+        },
       ),
     );
   }
