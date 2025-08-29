@@ -1,5 +1,6 @@
 // coffee_tracker/lib/features/coffee_tracker/presentation/pages/coffee_tracker_page.dart
 import 'package:coffee_tracker/core/auth/auth_service.dart';
+import 'package:coffee_tracker/core/widgets/app_scaffold.dart';
 import 'package:coffee_tracker/features/auth/presentation/pages/login_page.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
@@ -62,63 +63,63 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       appBar: AppBar(
         title: const Text('☕ Daily Coffee Tracker'),
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: AddCoffeeButton(selectedDate: selectedDate),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.bar_chart),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => BlocProvider.value(
-                    value: BlocProvider.of<StatisticsBloc>(context),
-                    child: const StatisticsPage(),
-                  ),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              // Show confirmation
-              final shouldLogout = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Logout'),
-                  content: const Text('Are you sure you want to logout?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Logout'),
-                    ),
-                  ],
-                ),
-              );
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.bar_chart),
+        //     onPressed: () {
+        //       Navigator.push(
+        //         context,
+        //         MaterialPageRoute(
+        //           builder: (context) => BlocProvider.value(
+        //             value: BlocProvider.of<StatisticsBloc>(context),
+        //             child: const StatisticsPage(),
+        //           ),
+        //         ),
+        //       );
+        //     },
+        //   ),
+        //   IconButton(
+        //     icon: const Icon(Icons.logout),
+        //     onPressed: () async {
+        //       // Show confirmation
+        //       final shouldLogout = await showDialog<bool>(
+        //         context: context,
+        //         builder: (context) => AlertDialog(
+        //           title: const Text('Logout'),
+        //           content: const Text('Are you sure you want to logout?'),
+        //           actions: [
+        //             TextButton(
+        //               onPressed: () => Navigator.pop(context, false),
+        //               child: const Text('Cancel'),
+        //             ),
+        //             TextButton(
+        //               onPressed: () => Navigator.pop(context, true),
+        //               child: const Text('Logout'),
+        //             ),
+        //           ],
+        //         ),
+        //       );
 
-              if (shouldLogout == true) {
-                // Call your existing AuthService logout
-                await di.sl<AuthService>().logout();
+        //       if (shouldLogout == true) {
+        //         // Call your existing AuthService logout
+        //         await di.sl<AuthService>().logout();
 
-                // Navigate to login
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                  (route) => false,
-                );
-              }
-            },
-          ),
-        ],
+        //         // Navigate to login
+        //         Navigator.of(context).pushAndRemoveUntil(
+        //           MaterialPageRoute(builder: (context) => const LoginPage()),
+        //           (route) => false,
+        //         );
+        //       }
+        //     },
+        //   ),
+        // ],
       ),
       body: Column(
         children: [

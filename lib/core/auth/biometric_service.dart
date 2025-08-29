@@ -1,3 +1,5 @@
+import 'package:coffee_tracker/features/auth/data/models/auth_response_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -8,6 +10,7 @@ class BiometricService {
   static const String _biometricAuthKey = 'biometric_auth_enabled';
   static const String _biometricMobileKey = 'biometric_mobile';
   static const String _biometricTokenKey = 'biometric_token';
+  static const String _biometricRefreshTokenKey = 'biometric_refresh_token';
 
   // Check if biometric login is enabled for any user
   Future<bool> isBiometricLoginEnabled() async {
@@ -15,23 +18,33 @@ class BiometricService {
       final enabled = await _storage.read(key: _biometricAuthKey);
       final mobile = await _storage.read(key: _biometricMobileKey);
       final token = await _storage.read(key: _biometricTokenKey);
+      final refresh = await _storage.read(key: _biometricRefreshTokenKey);
 
-      return enabled == 'true' && mobile != null && token != null;
+      return enabled == 'true' &&
+          mobile != null &&
+          token != null &&
+          refresh != null;
     } catch (e) {
-      print('Biometric login check error: $e');
+      debugPrint('Biometric login check error: $e');
       return false;
     }
   }
 
   // Enable biometric login for a user (call this after successful OTP login)
-  Future<void> enableBiometricLogin(String mobile, String token) async {
+  Future<void> enableBiometricLogin(
+    String mobile,
+    String accessToken,
+    String refreshToken,
+  ) async {
     try {
       await _storage.write(key: _biometricAuthKey, value: 'true');
       await _storage.write(key: _biometricMobileKey, value: mobile);
-      await _storage.write(key: _biometricTokenKey, value: token);
-      print('Biometric login enabled for user: $mobile');
+      await _storage.write(key: _biometricTokenKey, value: accessToken);
+      await _storage.write(key: _biometricRefreshTokenKey, value: refreshToken);
+
+      debugPrint('Biometric login enabled for user: $mobile');
     } catch (e) {
-      print('Error enabling biometric login: $e');
+      debugPrint('Error enabling biometric login: $e');
       rethrow;
     }
   }
@@ -42,41 +55,42 @@ class BiometricService {
       await _storage.delete(key: _biometricAuthKey);
       await _storage.delete(key: _biometricMobileKey);
       await _storage.delete(key: _biometricTokenKey);
-      print('Biometric login disabled');
+      debugPrint('Biometric login disabled');
     } catch (e) {
-      print('Error disabling biometric login: $e');
+      debugPrint('Error disabling biometric login: $e');
     }
   }
 
   // Get stored biometric login data
-  Future<Map<String, String>?> getBiometricLoginData() async {
+  Future<AuthTokens?> getBiometricLoginData() async {
     try {
       final mobile = await _storage.read(key: _biometricMobileKey);
-      final token = await _storage.read(key: _biometricTokenKey);
+      final access = await _storage.read(key: _biometricTokenKey);
+      final refresh = await _storage.read(key: _biometricRefreshTokenKey);
 
-      if (mobile == null || token == null) {
+      if (mobile == null || access == null || refresh == null) {
         return null;
       }
 
-      return {'mobile': mobile, 'token': token};
+      return AuthTokens(accessToken: access, refreshToken: refresh);
     } catch (e) {
-      print('Error getting biometric data: $e');
+      debugPrint('Error getting biometric data: $e');
       return null;
     }
   }
 
-  // Authenticate with biometrics and return stored token
-  Future<String?> authenticateAndGetToken() async {
+  // Authenticate with biometrics and return stored tokens
+  Future<AuthTokens?> authenticateAndGetTokens() async {
     try {
-      print('Checking biometric availability...');
+      debugPrint('Checking biometric availability...');
       final isAvailable = await isBiometricAvailable();
 
       if (!isAvailable) {
-        print('Biometric authentication not available.');
+        debugPrint('Biometric authentication not available.');
         return null;
       }
 
-      print('Starting biometric authentication...');
+      debugPrint('Starting biometric authentication...');
       final result = await _localAuth.authenticate(
         localizedReason: 'Authenticate to access your coffee tracker',
         options: const AuthenticationOptions(
@@ -87,15 +101,15 @@ class BiometricService {
       );
 
       if (result) {
-        print('Biometric authentication successful');
+        debugPrint('Biometric authentication successful');
         final data = await getBiometricLoginData();
-        return data?['token'];
+        return data;
       } else {
-        print('Biometric authentication failed');
+        debugPrint('Biometric authentication failed');
         return null;
       }
     } catch (e) {
-      print('Biometric authentication error: $e');
+      debugPrint('Biometric authentication error: $e');
       return null;
     }
   }
@@ -104,10 +118,10 @@ class BiometricService {
   Future<bool> isBiometricAvailable() async {
     try {
       final result = await _localAuth.canCheckBiometrics;
-      print('Biometric availability: $result');
+      debugPrint('Biometric availability: $result');
       return result;
     } catch (e) {
-      print('Biometric availability check error: $e');
+      debugPrint('Biometric availability check error: $e');
       return false;
     }
   }
@@ -116,10 +130,10 @@ class BiometricService {
   Future<List<BiometricType>> getAvailableBiometrics() async {
     try {
       final result = await _localAuth.getAvailableBiometrics();
-      print('Available biometrics: $result');
+      debugPrint('Available biometrics: $result');
       return result;
     } catch (e) {
-      print('Get available biometrics error: $e');
+      debugPrint('Get available biometrics error: $e');
       return [];
     }
   }
@@ -127,16 +141,16 @@ class BiometricService {
   // Authenticate with biometrics
   Future<bool> authenticate() async {
     try {
-      print('Checking biometric availability...');
+      debugPrint('Checking biometric availability...');
       final isAvailable = await isBiometricAvailable();
-      print('Biometric available: $isAvailable');
+      debugPrint('Biometric available: $isAvailable');
 
       if (!isAvailable) {
-        print('Biometric authentication not available.');
+        debugPrint('Biometric authentication not available.');
         return false;
       }
 
-      print('Starting authentication...');
+      debugPrint('Starting authentication...');
       final result = await _localAuth.authenticate(
         localizedReason: 'Authenticate to access your coffee tracker',
         options: const AuthenticationOptions(
@@ -146,10 +160,10 @@ class BiometricService {
         ),
       );
 
-      print('Authentication result: $result');
+      debugPrint('Authentication result: $result');
       return result;
     } catch (e) {
-      print('Authentication error: $e');
+      debugPrint('Authentication error: $e');
       return false;
     }
   }
@@ -159,7 +173,7 @@ class BiometricService {
     try {
       return await _localAuth.isDeviceSupported();
     } catch (e) {
-      print('Device support check error: $e');
+      debugPrint('Device support check error: $e');
       return false;
     }
   }
@@ -168,7 +182,7 @@ class BiometricService {
   Future<bool> hasFingerprint() async {
     final biometrics = await getAvailableBiometrics();
     final result = biometrics.contains(BiometricType.fingerprint);
-    print('Fingerprint available: $result');
+    debugPrint('Fingerprint available: $result');
     return result;
   }
 
@@ -176,7 +190,7 @@ class BiometricService {
   Future<bool> hasFace() async {
     final biometrics = await getAvailableBiometrics();
     final result = biometrics.contains(BiometricType.face);
-    print('Face recognition available: $result');
+    debugPrint('Face recognition available: $result');
     return result;
   }
 
@@ -184,7 +198,7 @@ class BiometricService {
   Future<bool> hasIris() async {
     final biometrics = await getAvailableBiometrics();
     final result = biometrics.contains(BiometricType.iris);
-    print('Iris recognition available: $result');
+    debugPrint('Iris recognition available: $result');
     return result;
   }
 }

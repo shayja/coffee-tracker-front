@@ -1,12 +1,12 @@
-// lib/features/auth/presentation/pages/login_page.dart
+// file:lib/features/auth/presentation/pages/login_page.dart
 import 'package:coffee_tracker/core/auth/biometric_service.dart';
 import 'package:coffee_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:coffee_tracker/features/auth/presentation/bloc/auth_event.dart';
 import 'package:coffee_tracker/features/auth/presentation/bloc/auth_state.dart';
+import 'package:coffee_tracker/features/auth/presentation/widgets/biometric_button.dart';
 import 'package:coffee_tracker/injection_container.dart' as di;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:local_auth/local_auth.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -26,9 +26,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    // Check if user is already authenticated
     context.read<AuthBloc>().add(CheckAuthenticationEvent());
-    // Check biometric status
     _checkBiometricStatus();
   }
 
@@ -36,16 +34,21 @@ class _LoginPageState extends State<LoginPage> {
     final biometricService = di.sl<BiometricService>();
     final isAvailable = await biometricService.isBiometricAvailable();
     final isEnabled = await biometricService.isBiometricLoginEnabled();
+    if (!mounted) return;
 
-    if (mounted) {
-      setState(() {
-        _biometricAvailable = isAvailable;
-        _biometricEnabled = isEnabled;
-      });
-    }
+    setState(() {
+      _biometricAvailable = isAvailable;
+      _biometricEnabled = isEnabled;
+    });
   }
 
-  void _showBiometricEnableDialog(String token) {
+  void _showBiometricEnableDialog(
+    String mobile,
+    String token,
+    String refreshToken,
+  ) {
+    if (!mounted || mobile.isEmpty) return;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -61,14 +64,13 @@ class _LoginPageState extends State<LoginPage> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              if (_currentMobile != null) {
-                context.read<AuthBloc>().add(
-                  EnableBiometricLoginEvent(
-                    mobile: _currentMobile!,
-                    token: token,
-                  ),
-                );
-              }
+              context.read<AuthBloc>().add(
+                EnableBiometricLoginEvent(
+                  mobile: mobile,
+                  token: token,
+                  refreshToken: refreshToken,
+                ),
+              );
             },
             child: const Text('Enable'),
           ),
@@ -83,32 +85,61 @@ class _LoginPageState extends State<LoginPage> {
       appBar: AppBar(title: const Text('Login')),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is NavigateToHome) {
-            // ← Change this from AuthAuthenticated to NavigateToHome
-            // Store the mobile number
-            _currentMobile = _mobileController.text;
+          if (!mounted) return;
 
-            // Navigate safely using addPostFrameCallback
+          if (state is NavigateToHome) {
+            // Use mobile from state if valid, otherwise fallback to current input
+            // final mobile = state.mobile?.trim().isNotEmpty == true
+            //     ? state.mobile!
+            //     : (_currentMobile ?? '');
+            // final token = state.token;
+            // final refreshToken = state.refreshToken ?? '';
+
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                Navigator.pushReplacementNamed(context, '/coffee-tracker');
-              }
+              if (!mounted) return;
+              Navigator.pushReplacementNamed(context, '/coffee-tracker');
+
+              // if (_biometricAvailable &&
+              //     _biometricEnabled &&
+              //     mobile.isNotEmpty) {
+              //   _showBiometricEnableDialog(mobile, token, refreshToken);
+              // }
+            });
+          } else if (state is BiometricLoginSuccess) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.pushReplacementNamed(context, '/coffee-tracker');
+            });
+
+            final mobile = state.mobile;
+            final token = state.token;
+            final refreshToken = state.refreshToken;
+            if (_biometricAvailable && _biometricEnabled && mobile.isNotEmpty) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _showBiometricEnableDialog(mobile, token, refreshToken);
+              });
+            }
+          } else if (state is ShowBiometricEnableDialog) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              _showBiometricEnableDialog(
+                state.mobile,
+                state.token,
+                state.refreshToken,
+              );
             });
           } else if (state is OtpSent) {
-            setState(() {
-              _otpSent = true;
-            });
+            setState(() => _otpSent = true);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('OTP sent successfully')),
             );
-          } else if (state is OtpRequestFailed) {
+          } else if (state is OtpRequestFailed ||
+              state is OtpVerificationFailed) {
+            final message = state is OtpRequestFailed
+                ? state.message
+                : (state as OtpVerificationFailed).message;
             ScaffoldMessenger.of(
               context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
-          } else if (state is OtpVerificationFailed) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
+            ).showSnackBar(SnackBar(content: Text(message)));
           } else if (state is InvalidMobileNumber) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -120,11 +151,10 @@ class _LoginPageState extends State<LoginPage> {
           }
         },
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // App Logo/Title
               const Icon(Icons.coffee, size: 80, color: Colors.brown),
               const SizedBox(height: 20),
               const Text(
@@ -133,9 +163,12 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 30),
 
-              // Biometric Login Section
               if (_biometricAvailable && _biometricEnabled) ...[
-                _buildBiometricSection(),
+                BiometricButton(
+                  scaffoldContext: context,
+                  biometricService: di.sl<BiometricService>(),
+                  mobile: _currentMobile?.trim() ?? '',
+                ),
                 const SizedBox(height: 30),
                 const Divider(),
                 const SizedBox(height: 20),
@@ -146,7 +179,6 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 20),
               ],
 
-              // Mobile Number Input
               TextField(
                 controller: _mobileController,
                 decoration: const InputDecoration(
@@ -157,14 +189,10 @@ class _LoginPageState extends State<LoginPage> {
                   hintText: 'Enter your mobile number',
                 ),
                 keyboardType: TextInputType.phone,
-                onChanged: (value) {
-                  // Update current mobile for biometric enablement
-                  _currentMobile = value;
-                },
+                onChanged: (value) => _currentMobile = value,
               ),
               const SizedBox(height: 20),
 
-              // OTP Input (shown only after OTP is sent)
               if (_otpSent)
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
@@ -181,14 +209,11 @@ class _LoginPageState extends State<LoginPage> {
                     maxLength: 6,
                   ),
                 ),
-
               if (_otpSent) const SizedBox(height: 20),
 
-              // Action Button
               BlocBuilder<AuthBloc, AuthState>(
                 builder: (context, state) {
                   final isLoading = state is AuthLoading;
-
                   return ElevatedButton(
                     onPressed: isLoading
                         ? null
@@ -211,7 +236,6 @@ class _LoginPageState extends State<LoginPage> {
                 },
               ),
 
-              // Reset OTP button
               if (_otpSent)
                 TextButton(
                   onPressed: () {
@@ -229,48 +253,8 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildBiometricSection() {
-    return Column(
-      children: [
-        FutureBuilder<List<BiometricType>>(
-          future: di.sl<BiometricService>().getAvailableBiometrics(),
-          builder: (context, snapshot) {
-            if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-              final biometricType = snapshot.data!.first;
-              return Column(
-                children: [
-                  IconButton(
-                    iconSize: 60,
-                    icon: _getBiometricIcon(biometricType),
-                    onPressed: () {
-                      context.read<AuthBloc>().add(BiometricLoginEvent());
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Login with ${_getBiometricName(biometricType)}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  const Text(
-                    'Tap to authenticate',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
-              );
-            }
-            return const SizedBox.shrink();
-          },
-        ),
-      ],
-    );
-  }
-
   void _requestOtp() {
-    if (_mobileController.text.isEmpty) {
+    if (_mobileController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter mobile number'),
@@ -280,11 +264,13 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    context.read<AuthBloc>().add(RequestOtpEvent(_mobileController.text));
+    context.read<AuthBloc>().add(
+      RequestOtpEvent(_mobileController.text.trim()),
+    );
   }
 
   void _verifyOtp() {
-    if (_otpController.text.isEmpty) {
+    if (_otpController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter OTP'),
@@ -295,32 +281,11 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     context.read<AuthBloc>().add(
-      VerifyOtpEvent(mobile: _mobileController.text, otp: _otpController.text),
+      VerifyOtpEvent(
+        mobile: _mobileController.text.trim(),
+        otp: _otpController.text.trim(),
+      ),
     );
-  }
-
-  Icon _getBiometricIcon(BiometricType type) {
-    switch (type) {
-      case BiometricType.face:
-        return const Icon(Icons.face, size: 50, color: Colors.brown);
-      case BiometricType.iris:
-        return const Icon(Icons.remove_red_eye, size: 50, color: Colors.brown);
-      case BiometricType.fingerprint:
-      default:
-        return const Icon(Icons.fingerprint, size: 50, color: Colors.brown);
-    }
-  }
-
-  String _getBiometricName(BiometricType type) {
-    switch (type) {
-      case BiometricType.face:
-        return 'Face ID';
-      case BiometricType.iris:
-        return 'Iris Scan';
-      case BiometricType.fingerprint:
-      default:
-        return 'Fingerprint';
-    }
   }
 
   @override

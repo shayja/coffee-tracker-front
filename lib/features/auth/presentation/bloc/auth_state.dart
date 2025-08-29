@@ -111,6 +111,33 @@ class BiometricStatusChecked extends AuthState {
 }
 
 class NavigateToHome extends AuthState {
+  final String? mobile;
   final String token;
-  const NavigateToHome({required this.token});
+  final String? refreshToken;
+
+  const NavigateToHome({this.mobile, required this.token, this.refreshToken});
+}
+
+class BiometricLoginSuccess extends AuthState {
+  final String token;
+  final String mobile;
+  final String refreshToken;
+
+  const BiometricLoginSuccess({
+    required this.token,
+    required this.mobile,
+    required this.refreshToken,
+  });
+}
+
+class ShowBiometricEnableDialog extends AuthState {
+  final String mobile;
+  final String token;
+  final String refreshToken;
+
+  const ShowBiometricEnableDialog({
+    required this.mobile,
+    required this.token,
+    required this.refreshToken,
+  });
 }

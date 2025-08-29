@@ -27,11 +27,11 @@ class StatisticsRemoteDataSourceImpl implements StatisticsRemoteDataSource {
 
     // If token is null or expired, try to refresh
     if (token == null || (await authService.isTokenExpired(token))) {
-      //print('Token missing or expired, attempting refresh...');
+      //debugPrint('Token missing or expired, attempting refresh...');
       final refreshed = await authService.refreshToken();
       if (refreshed != null) {
         token = await authService.getValidAccessToken();
-        //print('Token refresh successful');
+        //debugPrint('Token refresh successful');
       } else {
         //('Token refresh failed');
         throw Exception('Authentication required - please login again');

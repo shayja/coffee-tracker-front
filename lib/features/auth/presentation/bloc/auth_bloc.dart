@@ -10,6 +10,7 @@ import 'package:coffee_tracker/features/auth/domain/usecases/request_otp.dart';
 import 'package:coffee_tracker/features/auth/domain/usecases/verify_otp.dart';
 import 'package:coffee_tracker/features/auth/presentation/bloc/auth_event.dart';
 import 'package:coffee_tracker/features/auth/presentation/bloc/auth_state.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
@@ -18,7 +19,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final IsAuthenticated isAuthenticated;
   final Logout logout;
   final BiometricLogin biometricLogin;
-  //final EnableBiometricLogin enableBiometricLogin;
+  final EnableBiometricLogin enableBiometricLogin;
 
   AuthBloc({
     required this.requestOtp,
@@ -26,14 +27,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.isAuthenticated,
     required this.logout,
     required this.biometricLogin,
-    //required this.enableBiometricLogin,
+    required this.enableBiometricLogin,
   }) : super(AuthInitial()) {
     on<RequestOtpEvent>(_onRequestOtp);
     on<VerifyOtpEvent>(_onVerifyOtp);
     on<CheckAuthenticationEvent>(_onCheckAuthentication);
     on<LogoutEvent>(_onLogout);
     on<BiometricLoginEvent>(_onBiometricLogin);
-    //on<EnableBiometricLoginEvent>(_onEnableBiometricLogin);
+    on<EnableBiometricLoginEvent>(_onEnableBiometricLogin);
     //on<CheckBiometricStatusEvent>(_onCheckBiometricStatus);
   }
 
@@ -83,33 +84,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           );
         }
       },
-      (token) async {
-        // Emit the authenticated state first
-        emit(NavigateToHome(token: token));
+      (token) {
+        // OTP verified successfully
+        emit(NavigateToHome(token: token, mobile: event.mobile));
 
-        // // Then enable biometric login in the background without affecting the state
-        // // Use a delayed future to avoid state changes during UI build
-        // Future.delayed(Duration.zero, () async {
-        //   try {
-        //     final enableResult = await enableBiometricLogin(
-        //       EnableBiometricLoginParams(mobile: event.mobile, token: token),
-        //     );
-
-        //     enableResult.fold(
-        //       (failure) {
-        //         print('Failed to auto-enable biometric login: $failure');
-        //         // Don't emit state here as we're already authenticated
-        //       },
-        //       (_) {
-        //         print('Biometric login enabled automatically');
-        //         // You could optionally emit a different state here if needed,
-        //         // but be careful about state changes after authentication
-        //       },
-        //     );
-        //   } catch (e) {
-        //     print('Exception in auto-enable biometric login: $e');
-        //   }
-        // });
+        // Emit a state to trigger the biometric dialog in the UI
+        //emit(ShowBiometricEnableDialog(mobile: event.mobile, token: token, refreshToken: ''));
       },
     );
   }
@@ -149,17 +129,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     BiometricLoginEvent event,
     Emitter<AuthState> emit,
   ) async {
-    print('_onBiometricLogin started');
+    debugPrint('_onBiometricLogin started');
     emit(AuthLoading());
 
     try {
-      print('Calling biometricLogin use case...');
+      debugPrint('Calling biometricLogin use case...');
       final result = await biometricLogin(NoParams());
-      print('biometricLogin result: $result');
+      debugPrint('biometricLogin result: $result');
 
       result.fold(
         (failure) {
-          print('Biometric login failed: $failure');
+          debugPrint('Biometric login failed: $failure');
           if (failure is BiometricNotAvailableFailure) {
             emit(AuthBiometricNotAvailable());
           } else if (failure is NoStoredTokenFailure) {
@@ -173,17 +153,24 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           }
         },
         (token) {
-          print('Biometric login successful! Token: $token');
-          emit(NavigateToHome(token: token));
+          debugPrint('Biometric login successful! Token: $token');
+
+          // Emit a special state for the UI to respond
+          emit(
+            BiometricLoginSuccess(
+              mobile: event.mobile,
+              token: token.accessToken,
+              refreshToken: token.refreshToken,
+            ),
+          );
         },
       );
     } catch (e) {
-      print('Exception in _onBiometricLogin: $e');
+      debugPrint('Exception in _onBiometricLogin: $e');
       emit(AuthError(message: 'Unexpected error during biometric login'));
     }
   }
 
-  /*
   Future<void> _onEnableBiometricLogin(
     EnableBiometricLoginEvent event,
     Emitter<AuthState> emit,
@@ -191,15 +178,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
 
     try {
-      print('Enabling biometric login for user: ${event.mobile}');
+      debugPrint('Enabling biometric login for user: ${event.mobile}');
 
       final result = await enableBiometricLogin(
-        EnableBiometricLoginParams(mobile: event.mobile, token: event.token),
+        EnableBiometricLoginParams(
+          mobile: event.mobile,
+          token: event.token,
+          refreshToken: event.refreshToken,
+        ),
       );
 
       result.fold(
         (failure) {
-          print('Biometric enable failed: $failure');
+          debugPrint('Biometric enable failed: $failure');
           emit(
             BiometricEnableFailed(
               message: _getBiometricEnableErrorMessage(failure),
@@ -207,14 +198,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           );
         },
         (_) {
-          print('Biometric login enabled successfully');
+          debugPrint('Biometric login enabled successfully');
           emit(
             BiometricEnabled(message: 'Biometric login enabled successfully'),
           );
         },
       );
     } catch (e) {
-      print('Unexpected error enabling biometric login: $e');
+      debugPrint('Unexpected error enabling biometric login: $e');
       emit(
         BiometricEnableFailed(
           message: 'Failed to enable biometric login. Please try again.',
@@ -222,7 +213,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
     }
   }
-*/
+
   /*
   Future<void> _onCheckBiometricStatus(
     CheckBiometricStatusEvent event,
@@ -240,7 +231,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         isAvailable: isAvailable,
       ));
     } catch (e) {
-      print('Error checking biometric status: $e');
+      debugPrint('Error checking biometric status: $e');
       emit(BiometricStatusChecked(
         isEnabled: false,
         isAvailable: false,

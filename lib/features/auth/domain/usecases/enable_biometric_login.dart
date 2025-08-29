@@ -6,8 +6,13 @@ import 'package:dartz/dartz.dart';
 class EnableBiometricLoginParams {
   final String mobile;
   final String token;
+  final String refreshToken;
 
-  EnableBiometricLoginParams({required this.mobile, required this.token});
+  EnableBiometricLoginParams({
+    required this.mobile,
+    required this.token,
+    required this.refreshToken,
+  });
 }
 
 class EnableBiometricLogin
@@ -18,6 +23,10 @@ class EnableBiometricLogin
 
   @override
   Future<Either<Failure, void>> call(EnableBiometricLoginParams params) async {
-    return await repository.enableBiometricLogin(params.mobile, params.token);
+    return await repository.enableBiometricLogin(
+      params.mobile,
+      params.token,
+      params.refreshToken,
+    );
   }
 }

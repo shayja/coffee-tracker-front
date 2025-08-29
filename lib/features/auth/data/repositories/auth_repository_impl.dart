@@ -5,8 +5,10 @@ import 'package:coffee_tracker/core/auth/biometric_service.dart';
 import 'package:coffee_tracker/core/error/failures.dart';
 import 'package:coffee_tracker/core/network/network_info.dart';
 import 'package:coffee_tracker/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:coffee_tracker/features/auth/data/models/auth_response_model.dart';
 import 'package:coffee_tracker/features/auth/domain/repositories/auth_repository.dart';
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -80,34 +82,18 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, String>> biometricLogin() async {
-    print('Biometric login called in repository');
-
+  Future<Either<Failure, AuthTokens>> biometricLogin() async {
     try {
-      // 1. Check if biometric login is enabled
       final isEnabled = await biometricService.isBiometricLoginEnabled();
-      if (!isEnabled) {
-        print('Biometric login not enabled');
-        return Left(BiometricNotEnabledFailure());
-      }
+      if (!isEnabled) return Left(BiometricNotEnabledFailure());
 
-      // 2. Authenticate with biometrics and get stored token
-      print('Authenticating with biometrics...');
-      final token = await biometricService.authenticateAndGetToken();
+      final tokens = await biometricService.authenticateAndGetTokens();
+      if (tokens == null) return Left(BiometricAuthenticationFailure());
 
-      if (token == null) {
-        print('Biometric authentication failed or no token found');
-        return Left(BiometricAuthenticationFailure());
-      }
-
-      // 3. Verify the token is still valid (optional)
-      // You could add a check here to see if the token is expired
-      // and attempt to refresh it if needed
-
-      print('Biometric login successful!');
-      return Right(token);
+      debugPrint('[BiometricLogin] Success ✅ Tokens: $tokens');
+      return Right(tokens);
     } catch (e) {
-      print('Error in biometric login: $e');
+      debugPrint('Error in biometric login: $e');
       return Left(LocalStorageFailure());
     }
   }
@@ -117,9 +103,10 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, void>> enableBiometricLogin(
     String mobile,
     String token,
+    String refreshToken,
   ) async {
     try {
-      await biometricService.enableBiometricLogin(mobile, token);
+      await biometricService.enableBiometricLogin(mobile, token, refreshToken);
       return Right(null);
     } catch (e) {
       return Left(LocalStorageFailure());

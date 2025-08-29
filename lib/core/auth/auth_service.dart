@@ -1,6 +1,7 @@
 // lib/core/auth/auth_service.dart
 import 'dart:convert';
 import 'package:coffee_tracker/features/auth/data/models/auth_response_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:jwt_decoder/jwt_decoder.dart';
@@ -26,6 +27,9 @@ class AuthService {
 
   // Request OTP
   Future<Map<String, dynamic>> requestOtp(String mobile) async {
+    debugPrint(
+      'Requesting OTP for mobile: $mobile, URL: $baseUrl/auth/request-otp',
+    );
     try {
       final response = await client.post(
         Uri.parse('$baseUrl/auth/request-otp'),
@@ -65,7 +69,7 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      print('Error verifying OTP: $e');
+      debugPrint('Error verifying OTP: $e');
       return null;
     }
   }
@@ -73,14 +77,15 @@ class AuthService {
   // Refresh token
   Future<String?> refreshToken() async {
     final refreshToken = await storage.read(key: _refreshTokenKey);
+    
     if (refreshToken == null) {
-      print('No refresh token available');
+      debugPrint('No refresh token available');
       return null;
     }
 
     // Check if refresh token is expired
     if (await isTokenExpired(refreshToken)) {
-      print('Refresh token expired');
+      debugPrint('Refresh token expired');
       await logout(); // Clear expired tokens
       return null;
     }
@@ -92,23 +97,23 @@ class AuthService {
         body: jsonEncode({'refresh_token': refreshToken}),
       );
 
-      print('Refresh response: ${response.statusCode}');
+      debugPrint('Refresh response: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final res = await _saveTokensFromResponse(response.body);
-        print('Token refresh successful');
+        debugPrint('Token refresh successful');
         return res.refreshToken;
       } else if (response.statusCode == 401) {
         // Refresh token is invalid/expired
-        print('Refresh token invalid - logging out');
+        debugPrint('Refresh token invalid - logging out');
         await logout();
         return null;
       }
 
-      print('Refresh failed with status: ${response.statusCode}');
+      debugPrint('Refresh failed with status: ${response.statusCode}');
       return null;
     } catch (e) {
-      print('Refresh token error: $e');
+      debugPrint('Refresh token error: $e');
       return null;
     }
   }
@@ -118,7 +123,7 @@ class AuthService {
     try {
       return JwtDecoder.isExpired(token);
     } catch (e) {
-      print('Token validation error: $e');
+      debugPrint('Token validation error: $e');
       return true; // Consider invalid tokens as expired
     }
   }
@@ -127,7 +132,7 @@ class AuthService {
   Future<void> logout() async {
     await storage.delete(key: _accessTokenKey);
     await storage.delete(key: _refreshTokenKey);
-    print('All tokens cleared on logout');
+    debugPrint('All tokens cleared on logout');
   }
 
   // Get current access token
@@ -135,26 +140,35 @@ class AuthService {
     try {
       return await storage.read(key: _accessTokenKey);
     } catch (e) {
-      print('Error retrieving token: $e');
+      debugPrint('Error retrieving token: $e');
       return null;
     }
   }
 
-  Future<AuthResponseTokenModel> _saveTokensFromResponse(
-    String responseBody,
-  ) async {
+  Future<AuthTokens> _saveTokensFromResponse(String responseBody) async {
     try {
       final jsonResponse = jsonDecode(responseBody);
-      final entity = AuthResponseTokenModel.fromJson(jsonResponse);
+      final entity = AuthTokens.fromJson(jsonResponse);
 
       await storage.write(key: _accessTokenKey, value: entity.accessToken);
       await storage.write(key: _refreshTokenKey, value: entity.refreshToken);
-      print('Tokens saved successfully');
+      debugPrint('Tokens saved successfully');
       return entity;
     } catch (e) {
-      print('Error saving tokens: $e');
+      debugPrint('Error saving tokens: $e');
       rethrow;
     }
+  }
+
+  Future<void> saveBiometricTokens(
+    String mobile,
+    String accessToken,
+    String refreshToken,
+  ) async {
+    final storage = FlutterSecureStorage();
+    await storage.write(key: 'biometric_mobile', value: mobile);
+    await storage.write(key: 'biometric_access_token', value: accessToken);
+    await storage.write(key: 'biometric_refresh_token', value: refreshToken);
   }
 
   // Add this helper method
@@ -173,51 +187,51 @@ class AuthService {
     }
   }
 
-  // Add this to your AuthService for debugging
-  Future<void> debugPrintStoredTokens() async {
-    final accessToken = await storage.read(key: _accessTokenKey);
-    final refreshToken = await storage.read(key: _refreshTokenKey);
-    final authToken = await storage.read(key: 'auth_token');
+  // // Add this to your AuthService for debugging
+  // Future<void> debugPrintStoredTokens() async {
+  //   final accessToken = await storage.read(key: _accessTokenKey);
+  //   final refreshToken = await storage.read(key: _refreshTokenKey);
+  //   final authToken = await storage.read(key: 'auth_token');
 
-    print('=== STORED TOKENS DEBUG ===');
-    print('Access Token: ${accessToken != null ? "EXISTS" : "NULL"}');
-    print('Refresh Token: ${refreshToken != null ? "EXISTS" : "NULL"}');
-    print('Legacy Auth Token: ${authToken != null ? "EXISTS" : "NULL"}');
+  //   debugPrint('=== STORED TOKENS DEBUG ===');
+  //   debugPrint('Access Token: ${accessToken != null ? "EXISTS" : "NULL"}');
+  //   debugPrint('Refresh Token: ${refreshToken != null ? "EXISTS" : "NULL"}');
+  //   debugPrint('Legacy Auth Token: ${authToken != null ? "EXISTS" : "NULL"}');
 
-    if (accessToken != null) {
-      final isExpired = JwtDecoder.isExpired(accessToken);
-      print('Access Token Expired: $isExpired');
-    }
-  }
+  //   if (accessToken != null) {
+  //     final isExpired = JwtDecoder.isExpired(accessToken);
+  //     debugPrint('Access Token Expired: $isExpired');
+  //   }
+  // }
 
-  Future<void> debugAuthStatus() async {
-    final accessToken = await storage.read(key: _accessTokenKey);
-    final refreshToken = await storage.read(key: _refreshTokenKey);
+  // Future<void> debugAuthStatus() async {
+  //   final accessToken = await storage.read(key: _accessTokenKey);
+  //   final refreshToken = await storage.read(key: _refreshTokenKey);
 
-    print('=== AUTH STATUS DEBUG ===');
-    print('Access Token: ${accessToken != null ? "EXISTS" : "NULL"}');
-    print('Refresh Token: ${refreshToken != null ? "EXISTS" : "NULL"}');
+  //   debugPrint('=== AUTH STATUS DEBUG ===');
+  //   debugPrint('Access Token: ${accessToken != null ? "EXISTS" : "NULL"}');
+  //   debugPrint('Refresh Token: ${refreshToken != null ? "EXISTS" : "NULL"}');
 
-    if (accessToken != null) {
-      final accessExpired = await isTokenExpired(accessToken);
-      print('Access Token Expired: $accessExpired');
-      print(
-        'Access Token Expiry: ${JwtDecoder.getExpirationDate(accessToken)}',
-      );
-    }
+  //   if (accessToken != null) {
+  //     final accessExpired = await isTokenExpired(accessToken);
+  //     debugPrint('Access Token Expired: $accessExpired');
+  //     debugPrint(
+  //       'Access Token Expiry: ${JwtDecoder.getExpirationDate(accessToken)}',
+  //     );
+  //   }
 
-    if (refreshToken != null) {
-      final refreshExpired = await isTokenExpired(refreshToken);
-      print('Refresh Token Expired: $refreshExpired');
-      print(
-        'Refresh Token Expiry: ${JwtDecoder.getExpirationDate(refreshToken)}',
-      );
-    }
-    print('=========================');
-  }
+  //   if (refreshToken != null) {
+  //     final refreshExpired = await isTokenExpired(refreshToken);
+  //     debugPrint('Refresh Token Expired: $refreshExpired');
+  //     debugPrint(
+  //       'Refresh Token Expiry: ${JwtDecoder.getExpirationDate(refreshToken)}',
+  //     );
+  //   }
+  //   debugPrint('=========================');
+  // }
 
-  // Call this method in your interceptor for debugging
-  Future<void> logTokenStatus() async {
-    await debugAuthStatus();
-  }
+  // // Call this method in your interceptor for debugging
+  // Future<void> logTokenStatus() async {
+  //   await debugAuthStatus();
+  // }
 }

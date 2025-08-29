@@ -33,11 +33,11 @@ class CoffeeTrackerRemoteDataSourceImpl
 
     // If token is null or expired, try to refresh
     if (token == null || (await authService.isTokenExpired(token))) {
-      //print('Token missing or expired, attempting refresh...');
+      //debugPrint('Token missing or expired, attempting refresh...');
       final refreshed = await authService.refreshToken();
       if (refreshed != null) {
         token = await authService.getValidAccessToken();
-        //print('Token refresh successful');
+        //debugPrint('Token refresh successful');
       } else {
         //('Token refresh failed');
         throw Exception('Authentication required - please login again');
@@ -83,7 +83,7 @@ class CoffeeTrackerRemoteDataSourceImpl
 
   @override
   Future<CoffeeTrackerEntry> addEntry(CoffeeTrackerEntry entry) async {
-    //print(entry.timestamp.toIso8601String());
+    //debugPrint(entry.timestamp.toIso8601String());
     final jsonBody = jsonEncode(entry.toCreateJson());
 
     final response = await client.post(
@@ -98,8 +98,8 @@ class CoffeeTrackerRemoteDataSourceImpl
     } else if (response.statusCode == 401) {
       throw Exception('Unauthorized: Please login again');
     } else {
-      //print('Server error: ${response.statusCode}');
-      //print('Response body: ${response.body}');
+      //debugPrint('Server error: ${response.statusCode}');
+      //debugPrint('Response body: ${response.body}');
       throw Exception('Failed to add coffee entry: ${response.statusCode}');
     }
   }
@@ -110,14 +110,14 @@ class CoffeeTrackerRemoteDataSourceImpl
     CoffeeTrackerEntry newEntry,
   ) async {
     final jsonBody = jsonEncode(newEntry.toUpdateJson());
-    //print('Response body: ${jsonBody}');
+    //debugPrint('Response body: ${jsonBody}');
     final response = await client.put(
       Uri.parse('$baseUrl/entries/${oldEntry.id}'),
       headers: await _getHeaders(),
       body: jsonBody,
     );
-    //print('Server error: ${response.statusCode}');
-    //print('Response body: ${response.body}');
+    //debugPrint('Server error: ${response.statusCode}');
+    //debugPrint('Response body: ${response.body}');
 
     if (response.statusCode != 200) {
       throw Exception('Failed to edit entry');
