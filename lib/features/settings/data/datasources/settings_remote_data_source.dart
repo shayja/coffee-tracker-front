@@ -6,7 +6,7 @@ import 'package:coffee_tracker/features/settings/data/models/settings_model.dart
 
 abstract class SettingsRemoteDataSource {
   Future<SettingsModel> getSettings();
-  Future<void> updateSetting(String key, bool value);
+  Future<void> updateSetting(int settingId, bool value);
 }
 
 class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
@@ -45,10 +45,7 @@ class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
   Future<SettingsModel> getSettings() async {
     try {
       final response = await client
-          .get(
-            Uri.parse('$baseUrl/settings'),
-            headers: await _getHeaders(),
-          )
+          .get(Uri.parse('$baseUrl/settings'), headers: await _getHeaders())
           .timeout(timeout);
 
       if (response.statusCode == 200) {
@@ -67,19 +64,19 @@ class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
   }
 
   @override
-  Future<void> updateSetting(String key, bool value) async {
+  Future<void> updateSetting(int settingId, bool value) async {
     try {
+      final url = '$baseUrl/settings/$settingId';
+      final headers = await _getHeaders();
+      final requestBody = json.encode({'key': settingId, 'value': value});
+
       final response = await client
-          .put(
-            Uri.parse('$baseUrl/settings/$key'),
-            headers: await _getHeaders(),
-            body: json.encode({'value': value}),
-          )
+          .patch(Uri.parse(url), headers: headers, body: requestBody)
           .timeout(timeout);
 
       if (response.statusCode == 401) {
         throw Exception('Unauthorized: Please login again');
-      } else if (response.statusCode != 200) {
+      } else if (response.statusCode != 200 && response.statusCode != 204) {
         throw Exception(
           'Failed to update setting - Status: ${response.statusCode}, Body: ${response.body}',
         );

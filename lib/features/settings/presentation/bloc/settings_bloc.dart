@@ -11,10 +11,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final GetSettings getSettings;
   final UpdateSetting updateSetting;
 
-  SettingsBloc({
-    required this.getSettings,
-    required this.updateSetting,
-  }) : super(SettingsInitial()) {
+  SettingsBloc({required this.getSettings, required this.updateSetting})
+    : super(SettingsInitial()) {
     on<LoadSettings>(_onLoadSettings);
     on<UpdateSettingEvent>(_onUpdateSetting);
   }
@@ -27,8 +25,13 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
     final result = await getSettings(NoParams());
     result.fold(
-      (failure) => emit(SettingsError(message: failure.toString())),
-      (settings) => emit(SettingsLoaded(settings: settings)),
+      (failure) {
+        // if failed, fallback to initial state instead of SettingsError
+        emit(SettingsLoaded.initial().copyWith(hasError: true));
+      },
+      (settings) {
+        emit(SettingsLoaded(settings: settings));
+      },
     );
   }
 
@@ -38,33 +41,39 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   ) async {
     if (state is SettingsLoaded) {
       final currentSettings = (state as SettingsLoaded).settings;
-      emit(SettingsUpdating(
-        settings: currentSettings,
-        updatingKey: event.key,
-      ));
+      emit(
+        SettingsUpdating(
+          settings: currentSettings,
+          updatingSettingId: event.settingId,
+        ),
+      );
 
       final result = await updateSetting(
-        UpdateSettingParams(key: event.key, value: event.value),
+        UpdateSettingParams(settingId: event.settingId, value: event.value),
       );
 
       result.fold(
         (failure) => emit(SettingsError(message: failure.toString())),
         (_) {
           // Update the local settings state optimistically
-          final updatedSettings = _updateLocalSettings(currentSettings, event.key, event.value);
+          final updatedSettings = _updateLocalSettings(
+            currentSettings,
+            event.settingId,
+            event.value,
+          );
           emit(SettingsLoaded(settings: updatedSettings));
         },
       );
     }
   }
 
-  Settings _updateLocalSettings(Settings settings, String key, bool value) {
-    switch (key) {
-      case 'BiometricEnabled':
+  Settings _updateLocalSettings(Settings settings, int settingId, bool value) {
+    switch (settingId) {
+      case 1: // SettingType.biometricEnabled
         return settings.copyWith(biometricEnabled: value);
-      case 'DarkMode':
+      case 2: // SettingType.darkMode
         return settings.copyWith(darkMode: value);
-      case 'NotificationsEnabled':
+      case 3: // SettingType.notificationsEnabled
         return settings.copyWith(notificationsEnabled: value);
       default:
         return settings;

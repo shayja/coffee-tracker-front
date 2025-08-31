@@ -2,6 +2,7 @@
 import 'package:coffee_tracker/core/auth/auth_service.dart';
 import 'package:coffee_tracker/core/auth/biometric_service.dart';
 import 'package:coffee_tracker/features/auth/presentation/pages/login_page.dart';
+import 'package:coffee_tracker/features/settings/domain/entities/setting_type.dart';
 import 'package:coffee_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:coffee_tracker/features/settings/presentation/bloc/settings_event.dart';
 import 'package:coffee_tracker/features/settings/presentation/bloc/settings_state.dart';
@@ -103,7 +104,10 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
 
         // Update backend setting
         context.read<SettingsBloc>().add(
-          UpdateSettingEvent(key: 'BiometricEnabled', value: true),
+          UpdateSettingEvent(
+            settingId: SettingType.biometricEnabled.id,
+            value: true,
+          ),
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -118,7 +122,10 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
 
       // Update backend setting
       context.read<SettingsBloc>().add(
-        UpdateSettingEvent(key: 'BiometricEnabled', value: false),
+        UpdateSettingEvent(
+          settingId: SettingType.biometricEnabled.id,
+          value: false,
+        ),
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -187,7 +194,9 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
               if (_biometricAvailable) ...[
                 SwitchListTile(
                   secondary:
-                      isUpdating && state.updatingKey == 'BiometricEnabled'
+                      isUpdating &&
+                          state.updatingSettingId ==
+                              SettingType.biometricEnabled.id
                       ? const SizedBox(
                           width: 24,
                           height: 24,
@@ -202,7 +211,9 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
                   ),
                   value: settings.biometricEnabled,
                   onChanged:
-                      isUpdating && state.updatingKey == 'BiometricEnabled'
+                      isUpdating &&
+                          state.updatingSettingId ==
+                              SettingType.biometricEnabled.id
                       ? null
                       : (value) =>
                             _toggleBiometric(value, settings.biometricEnabled),
@@ -227,6 +238,37 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
                   enabled: false,
                 ),
               ],
+              const Divider(),
+              SwitchListTile(
+                secondary:
+                    isUpdating &&
+                        state.updatingSettingId == SettingType.darkMode.id
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.dark_mode),
+                title: const Text("Dark Mode"),
+                subtitle: Text(
+                  settings.darkMode
+                      ? "Dark mode is enabled"
+                      : "Switch to dark theme for comfortable viewing",
+                ),
+                value: settings.darkMode,
+                onChanged:
+                    isUpdating &&
+                        state.updatingSettingId == SettingType.darkMode.id
+                    ? null
+                    : (value) {
+                        context.read<SettingsBloc>().add(
+                          UpdateSettingEvent(
+                            settingId: SettingType.darkMode.id,
+                            value: value,
+                          ),
+                        );
+                      },
+              ),
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.bar_chart),

@@ -15,11 +15,30 @@ class SettingsLoading extends SettingsState {}
 
 class SettingsLoaded extends SettingsState {
   final Settings settings;
+  final bool hasError;
 
-  const SettingsLoaded({required this.settings});
+  const SettingsLoaded({required this.settings, this.hasError = false});
 
   @override
-  List<Object> get props => [settings];
+  List<Object> get props => [settings, hasError];
+
+  /// Factory to provide sane defaults if nothing is cached yet
+  factory SettingsLoaded.initial() {
+    return SettingsLoaded(
+      settings: Settings(
+        biometricEnabled: false,
+        darkMode: false,
+        notificationsEnabled: true,
+      ),
+    );
+  }
+
+  SettingsLoaded copyWith({Settings? settings, bool? hasError}) {
+    return SettingsLoaded(
+      settings: settings ?? this.settings,
+      hasError: hasError ?? this.hasError,
+    );
+  }
 }
 
 class SettingsError extends SettingsState {
@@ -33,13 +52,13 @@ class SettingsError extends SettingsState {
 
 class SettingsUpdating extends SettingsState {
   final Settings settings;
-  final String updatingKey;
+  final int updatingSettingId;
 
   const SettingsUpdating({
     required this.settings,
-    required this.updatingKey,
+    required this.updatingSettingId,
   });
 
   @override
-  List<Object> get props => [settings, updatingKey];
+  List<Object> get props => [settings, updatingSettingId];
 }

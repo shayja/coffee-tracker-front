@@ -30,10 +30,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateSetting(String key, bool value) async {
+  Future<Either<Failure, void>> updateSetting(int settingId, bool value) async {
     if (await networkInfo.isConnected) {
       try {
-        await remoteDataSource.updateSetting(key, value);
+        await remoteDataSource.updateSetting(settingId, value);
         return const Right(null);
       } catch (e) {
         return Left(ServerFailure(message: e.toString()));

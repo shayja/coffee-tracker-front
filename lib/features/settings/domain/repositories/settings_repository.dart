@@ -5,5 +5,5 @@ import 'package:dartz/dartz.dart';
 
 abstract class SettingsRepository {
   Future<Either<Failure, Settings>> getSettings();
-  Future<Either<Failure, void>> updateSetting(String key, bool value);
+  Future<Either<Failure, void>> updateSetting(int settingId, bool value);
 }

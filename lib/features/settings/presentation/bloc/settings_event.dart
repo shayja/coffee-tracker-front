@@ -11,14 +11,14 @@ abstract class SettingsEvent extends Equatable {
 class LoadSettings extends SettingsEvent {}
 
 class UpdateSettingEvent extends SettingsEvent {
-  final String key;
+  final int settingId;
   final bool value;
 
   const UpdateSettingEvent({
-    required this.key,
+    required this.settingId,
     required this.value,
   });
 
   @override
-  List<Object> get props => [key, value];
+  List<Object> get props => [settingId, value];
 }

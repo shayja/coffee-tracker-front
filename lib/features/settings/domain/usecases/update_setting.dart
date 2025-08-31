@@ -12,19 +12,19 @@ class UpdateSetting implements UseCase<void, UpdateSettingParams> {
 
   @override
   Future<Either<Failure, void>> call(UpdateSettingParams params) async {
-    return await repository.updateSetting(params.key, params.value);
+    return await repository.updateSetting(params.settingId, params.value);
   }
 }
 
 class UpdateSettingParams extends Equatable {
-  final String key;
+  final int settingId;
   final bool value;
 
   const UpdateSettingParams({
-    required this.key,
+    required this.settingId,
     required this.value,
   });
 
   @override
-  List<Object> get props => [key, value];
+  List<Object> get props => [settingId, value];
 }
