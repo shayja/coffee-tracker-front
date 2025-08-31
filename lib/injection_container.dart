@@ -5,6 +5,7 @@ import 'package:coffee_tracker/core/config/app_config.dart';
 import 'package:coffee_tracker/features/auth/domain/usecases/biometric_login.dart';
 import 'package:coffee_tracker/features/auth/domain/usecases/enable_biometric_login.dart';
 import 'package:coffee_tracker/features/auth/domain/usecases/logout.dart';
+import 'package:coffee_tracker/features/settings/data/datasources/settings_local_data_source.dart';
 import 'package:coffee_tracker/features/statistics/data/datasources/statistics_remote_data_source.dart';
 import 'package:coffee_tracker/features/statistics/data/repositories/statistics_repository_impl.dart';
 import 'package:coffee_tracker/features/statistics/domain/repositories/statistics_repository.dart';
@@ -162,8 +163,13 @@ Future<void> init() async {
     ),
   );
 
+  sl.registerLazySingleton<SettingsLocalDataSource>(
+    () => SettingsLocalDataSourceImpl(prefs: sl()),
+  );
+
   sl.registerLazySingleton<SettingsRepository>(
     () => SettingsRepositoryImpl(
+      localDataSource: sl(),
       remoteDataSource: sl(),
       networkInfo: sl(),
     ),
@@ -172,10 +178,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetSettings(sl()));
   sl.registerLazySingleton(() => UpdateSetting(sl()));
 
-  sl.registerFactory(() => SettingsBloc(
-    getSettings: sl(),
-    updateSetting: sl(),
-  ));
+  sl.registerFactory(
+    () => SettingsBloc(getSettings: sl(), updateSetting: sl()),
+  );
 
   //! Register BiometricService
   sl.registerLazySingleton(() => BiometricService());

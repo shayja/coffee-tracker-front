@@ -26,7 +26,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     final result = await getSettings(NoParams());
     result.fold(
       (failure) {
-        // if failed, fallback to initial state instead of SettingsError
+        // fallback to initial state if fetch fails
         emit(SettingsLoaded.initial().copyWith(hasError: true));
       },
       (settings) {
@@ -39,11 +39,19 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     UpdateSettingEvent event,
     Emitter<SettingsState> emit,
   ) async {
-    if (state is SettingsLoaded) {
-      final currentSettings = (state as SettingsLoaded).settings;
+    if (state is SettingsLoaded || state is SettingsUpdating) {
+      final currentSettings = (state as dynamic).settings;
+
+      // Apply optimistic update immediately
+      final updatedSettings = _updateLocalSettings(
+        currentSettings,
+        event.settingId,
+        event.value,
+      );
+
       emit(
         SettingsUpdating(
-          settings: currentSettings,
+          settings: updatedSettings,
           updatingSettingId: event.settingId,
         ),
       );
@@ -53,14 +61,13 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       );
 
       result.fold(
-        (failure) => emit(SettingsError(message: failure.toString())),
+        (failure) {
+          // Rollback on failure
+          emit(SettingsError(message: failure.toString()));
+          emit(SettingsLoaded(settings: currentSettings));
+        },
         (_) {
-          // Update the local settings state optimistically
-          final updatedSettings = _updateLocalSettings(
-            currentSettings,
-            event.settingId,
-            event.value,
-          );
+          // Keep the updated settings after success
           emit(SettingsLoaded(settings: updatedSettings));
         },
       );
