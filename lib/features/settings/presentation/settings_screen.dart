@@ -267,6 +267,39 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
                       },
               ),
               const Divider(),
+              SwitchListTile(
+                secondary:
+                    isUpdating &&
+                        state.updatingSettingId ==
+                            SettingType.notificationsEnabled.id
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.notification_add),
+                title: const Text("Notifications"),
+                subtitle: Text(
+                  settings.darkMode
+                      ? "Notifications are enabled"
+                      : "Enable Notifications",
+                ),
+                value: settings.notificationsEnabled,
+                onChanged:
+                    isUpdating &&
+                        state.updatingSettingId ==
+                            SettingType.notificationsEnabled.id
+                    ? null
+                    : (value) {
+                        context.read<SettingsBloc>().add(
+                          UpdateSettingEvent(
+                            settingId: SettingType.notificationsEnabled.id,
+                            value: value,
+                          ),
+                        );
+                      },
+              ),
+              const Divider(),
               ListTile(
                 leading: const Icon(Icons.bar_chart),
                 title: const Text("Stats"),
