@@ -1,3 +1,5 @@
+import 'package:coffee_tracker/features/user/presentation/bloc/user_bloc.dart';
+import 'package:coffee_tracker/features/user/presentation/bloc/user_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'injection_container.dart' as di;
@@ -26,6 +28,8 @@ class CoffeeTrackerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider(create: (_) => di.sl<UserBloc>()..add(LoadUserProfile())),
+        BlocProvider(create: (_) => di.sl<SettingsBloc>()..add(LoadSettings())),
         BlocProvider(create: (_) => di.sl<AuthBloc>()),
         BlocProvider(create: (_) => di.sl<CoffeeTrackerBloc>()),
         BlocProvider(create: (_) => di.sl<StatisticsBloc>()),

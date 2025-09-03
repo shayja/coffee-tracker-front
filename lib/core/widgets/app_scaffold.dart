@@ -1,6 +1,10 @@
 // lib/core/widgets/app_scaffold.dart
+import 'package:coffee_tracker/features/user/presentation/bloc/user_bloc.dart';
+import 'package:coffee_tracker/features/user/presentation/bloc/user_event.dart';
+import 'package:coffee_tracker/injection_container.dart' as di;
 import 'package:flutter/material.dart';
 import 'package:coffee_tracker/features/settings/presentation/settings_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AppScaffold extends StatelessWidget {
   final AppBar? appBar;
@@ -22,7 +26,13 @@ class AppScaffold extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => BlocProvider(
+                          create: (_) =>
+                              di.sl<UserBloc>()..add(LoadUserProfile()),
+                          child: const SettingsScreen(),
+                        ),
+                      ),
                     );
                   },
                 ),

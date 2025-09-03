@@ -17,6 +17,10 @@ import 'package:coffee_tracker/features/settings/domain/repositories/settings_re
 import 'package:coffee_tracker/features/settings/domain/usecases/get_settings.dart';
 import 'package:coffee_tracker/features/settings/domain/usecases/update_setting.dart';
 import 'package:coffee_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:coffee_tracker/features/user/data/datasources/user_remote_data_source.dart';
+import 'package:coffee_tracker/features/user/data/repositories/user_repository_impl.dart';
+import 'package:coffee_tracker/features/user/domain/repositories/user_repository.dart';
+import 'package:coffee_tracker/features/user/presentation/bloc/user_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -101,6 +105,9 @@ Future<void> init() async {
       biometricService: sl(),
     ),
   );
+  sl.registerLazySingleton<UserRepository>(
+    () => UserRepositoryImpl(remoteDataSource: sl()),
+  );
 
   // Use cases
   sl.registerLazySingleton(() => AddCoffeeEntryUseCase(sl()));
@@ -136,6 +143,7 @@ Future<void> init() async {
       authService: sl(),
     ),
   );
+  sl.registerFactory(() => UserBloc(userRepository: sl()));
 
   //! Features - Statistics
   sl.registerLazySingleton<StatisticsRemoteDataSource>(
@@ -148,6 +156,14 @@ Future<void> init() async {
 
   sl.registerLazySingleton<StatisticsRepository>(
     () => StatisticsRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<UserRemoteDataSource>(
+    () => UserRemoteDataSourceImpl(
+      client: sl(),
+      baseUrl: AppConfig.baseUrl,
+      authService: sl(),
+    ),
   );
 
   sl.registerLazySingleton(() => GetStatistics(sl()));

@@ -1,4 +1,4 @@
-import 'package:coffee_tracker/features/auth/data/models/user_model.dart';
+import 'package:coffee_tracker/features/user/data/models/user_model.dart';
 
 class AuthResponseModel {
   final String accessToken;
