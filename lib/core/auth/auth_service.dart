@@ -12,7 +12,8 @@ class AuthService {
   final String baseUrl;
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
-  static const String _userMobileKey = 'user_mobile'; // Store user mobile persistently
+  static const String _userMobileKey =
+      'user_mobile'; // Store user mobile persistently
 
   AuthService({
     required this.client,
@@ -80,7 +81,7 @@ class AuthService {
   // Refresh token
   Future<String?> refreshToken() async {
     final refreshToken = await storage.read(key: _refreshTokenKey);
-    
+
     if (refreshToken == null) {
       debugPrint('No refresh token available');
       return null;
@@ -108,7 +109,7 @@ class AuthService {
         return res.refreshToken;
       } else if (response.statusCode == 401) {
         // Refresh token is invalid/expired
-        debugPrint('Refresh token invalid - logging out');
+        debugPrint('Refresh token $refreshToken invalid - logging out');
         await logout();
         return null;
       }
@@ -202,11 +203,12 @@ class AuthService {
 
       final decodedToken = JwtDecoder.decode(token);
       // Try different possible field names for mobile in JWT
-      final mobile = decodedToken['mobile'] ?? 
-                    decodedToken['phone'] ?? 
-                    decodedToken['phoneNumber'] ?? 
-                    decodedToken['sub']; // 'sub' is often used for user identifier
-      
+      final mobile =
+          decodedToken['mobile'] ??
+          decodedToken['phone'] ??
+          decodedToken['phoneNumber'] ??
+          decodedToken['sub']; // 'sub' is often used for user identifier
+
       debugPrint('Mobile extracted from JWT: $mobile');
       return mobile?.toString();
     } catch (e) {
@@ -252,52 +254,4 @@ class AuthService {
         return 'Failed to send OTP. Please try again.';
     }
   }
-
-  // // Add this to your AuthService for debugging
-  // Future<void> debugPrintStoredTokens() async {
-  //   final accessToken = await storage.read(key: _accessTokenKey);
-  //   final refreshToken = await storage.read(key: _refreshTokenKey);
-  //   final authToken = await storage.read(key: 'auth_token');
-
-  //   debugPrint('=== STORED TOKENS DEBUG ===');
-  //   debugPrint('Access Token: ${accessToken != null ? "EXISTS" : "NULL"}');
-  //   debugPrint('Refresh Token: ${refreshToken != null ? "EXISTS" : "NULL"}');
-  //   debugPrint('Legacy Auth Token: ${authToken != null ? "EXISTS" : "NULL"}');
-
-  //   if (accessToken != null) {
-  //     final isExpired = JwtDecoder.isExpired(accessToken);
-  //     debugPrint('Access Token Expired: $isExpired');
-  //   }
-  // }
-
-  // Future<void> debugAuthStatus() async {
-  //   final accessToken = await storage.read(key: _accessTokenKey);
-  //   final refreshToken = await storage.read(key: _refreshTokenKey);
-
-  //   debugPrint('=== AUTH STATUS DEBUG ===');
-  //   debugPrint('Access Token: ${accessToken != null ? "EXISTS" : "NULL"}');
-  //   debugPrint('Refresh Token: ${refreshToken != null ? "EXISTS" : "NULL"}');
-
-  //   if (accessToken != null) {
-  //     final accessExpired = await isTokenExpired(accessToken);
-  //     debugPrint('Access Token Expired: $accessExpired');
-  //     debugPrint(
-  //       'Access Token Expiry: ${JwtDecoder.getExpirationDate(accessToken)}',
-  //     );
-  //   }
-
-  //   if (refreshToken != null) {
-  //     final refreshExpired = await isTokenExpired(refreshToken);
-  //     debugPrint('Refresh Token Expired: $refreshExpired');
-  //     debugPrint(
-  //       'Refresh Token Expiry: ${JwtDecoder.getExpirationDate(refreshToken)}',
-  //     );
-  //   }
-  //   debugPrint('=========================');
-  // }
-
-  // // Call this method in your interceptor for debugging
-  // Future<void> logTokenStatus() async {
-  //   await debugAuthStatus();
-  // }
 }
