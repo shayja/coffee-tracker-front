@@ -29,6 +29,13 @@
 	<string>This app uses Face ID for secure login.</string>
 	<!-- ===== END BIOMETRIC AUTH ===== -->
 
+	<!-- ===== IMAGE UPLOAD AND EDIT ===== -->	
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to your photo library to select and upload photos.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app needs permission to save photos to your library.</string>
+	<!-- ===== END IMAGE UPLOAD AND EDIT ===== -->
+
 
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
