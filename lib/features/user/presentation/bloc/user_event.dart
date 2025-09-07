@@ -31,4 +31,3 @@ class UploadUserAvatar extends UserEvent {
 }
 
 class DeleteUserAvatar extends UserEvent {}
-

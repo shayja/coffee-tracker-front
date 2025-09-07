@@ -1,3 +1,4 @@
+// lib/features/user/presentation/bloc/user_block.dart
 import 'package:coffee_tracker/features/user/domain/entities/user.dart';
 import 'package:coffee_tracker/features/user/domain/repositories/user_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
