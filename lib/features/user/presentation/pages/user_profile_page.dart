@@ -1,14 +1,11 @@
-// lib/features/user/presentation/pages/user_profile_page.dart
 import 'dart:io';
 
 import 'package:coffee_tracker/features/user/presentation/bloc/user_bloc.dart';
 import 'package:coffee_tracker/features/user/presentation/bloc/user_event.dart';
 import 'package:coffee_tracker/features/user/presentation/bloc/user_state.dart';
+import 'package:coffee_tracker/features/user/presentation/widgets/profile_avatar_editor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:photo_view/photo_view.dart';
-import 'package:image_cropper/image_cropper.dart';
 
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
@@ -33,70 +30,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
     _nameController.dispose();
     _emailController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-    );
-    if (pickedFile != null) {
-      File imageFile = File(pickedFile.path);
-
-      // Show preview dialog with move/zoom (photo_view)
-      final shouldContinue = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text("Preview Image"),
-          content: SizedBox(
-            width: 300,
-            height: 300,
-            child: PhotoView(
-              imageProvider: FileImage(imageFile),
-              minScale: PhotoViewComputedScale.contained,
-              maxScale: PhotoViewComputedScale.covered * 2.0,
-            ),
-          ),
-          actions: [
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () => Navigator.of(ctx).pop(false),
-            ),
-            ElevatedButton(
-              child: Text('Crop'),
-              onPressed: () => Navigator.of(ctx).pop(true),
-            ),
-          ],
-        ),
-      );
-
-      if (shouldContinue != true) return;
-
-      // Now crop image
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: imageFile.path,
-        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1), // Square crop
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Crop Avatar',
-            toolbarColor: Colors.deepOrange,
-            toolbarWidgetColor: Colors.white,
-            lockAspectRatio: true, // Forces square crop
-          ),
-          IOSUiSettings(
-            title: 'Crop Avatar',
-            aspectRatioLockEnabled: true, // Forces square crop on iOS
-            aspectRatioPickerButtonHidden: true,
-          ),
-        ],
-      );
-
-      if (croppedFile != null) {
-        setState(() {
-          _pickedImage = File(croppedFile.path);
-        });
-        context.read<UserBloc>().add(UploadUserAvatar(_pickedImage!));
-      }
-    }
   }
 
   void _saveProfile() {
@@ -133,19 +66,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundImage: _pickedImage != null
-                          ? FileImage(_pickedImage!)
-                          : (user.avatarUrl != null
-                                    ? NetworkImage(user.avatarUrl!)
-                                    : const AssetImage(
-                                        'assets/images/avatar_placeholder.png',
-                                      ))
-                                as ImageProvider,
-                    ),
+                  ProfileAvatarEditor(
+                    avatarUrl: user.avatarUrl,
+                    onAvatarChanged: (croppedFile) async {
+                      context.read<UserBloc>().add(
+                        UploadUserAvatar(croppedFile),
+                      );
+                      setState(() {
+                        _pickedImage =
+                            croppedFile; // Optional for local preview
+                      });
+                    },
                   ),
                   const SizedBox(height: 16),
                   TextField(

@@ -14,10 +14,10 @@ import 'package:coffee_tracker/features/user/presentation/bloc/user_bloc.dart';
 import 'package:coffee_tracker/features/user/presentation/bloc/user_event.dart';
 import 'package:coffee_tracker/features/user/presentation/bloc/user_state.dart';
 import 'package:coffee_tracker/features/user/presentation/pages/user_profile_page.dart';
+import 'package:coffee_tracker/features/user/presentation/widgets/profile_avatar_editor.dart';
 import 'package:coffee_tracker/injection_container.dart' as di;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_picker/image_picker.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -58,15 +58,6 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
         _biometricAvailable = available;
         _persistentMobile = mobile;
       });
-    }
-  }
-
-  Future<void> _pickAvatar() async {
-    final pickedFile = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-    );
-    if (pickedFile != null) {
-      context.read<UserBloc>().add(UploadUserAvatar(File(pickedFile.path)));
     }
   }
 
@@ -167,17 +158,13 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
                 return Column(
                   children: [
                     const SizedBox(height: 20),
-                    GestureDetector(
-                      onTap: _pickAvatar,
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundImage: user.avatarUrl != null
-                            ? NetworkImage(user.avatarUrl!)
-                            : const AssetImage(
-                                    'assets/images/avatar_placeholder.png',
-                                  )
-                                  as ImageProvider,
-                      ),
+                    ProfileAvatarEditor(
+                      avatarUrl: user.avatarUrl,
+                      onAvatarChanged: (croppedFile) async {
+                        context.read<UserBloc>().add(
+                          UploadUserAvatar(croppedFile),
+                        );
+                      },
                     ),
                     const SizedBox(height: 12),
                     Text(
