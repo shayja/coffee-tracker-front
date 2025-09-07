@@ -32,34 +32,7 @@ class _ProfileAvatarEditorState extends State<ProfileAvatarEditor> {
 
     File imageFile = File(pickedFile.path);
 
-    final shouldContinue = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Preview Image"),
-        content: SizedBox(
-          width: 300,
-          height: 300,
-          child: PhotoView(
-            imageProvider: FileImage(imageFile),
-            minScale: PhotoViewComputedScale.contained,
-            maxScale: PhotoViewComputedScale.covered * 2.0,
-          ),
-        ),
-        actions: [
-          TextButton(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.of(ctx).pop(false),
-          ),
-          ElevatedButton(
-            child: const Text('Crop'),
-            onPressed: () => Navigator.of(ctx).pop(true),
-          ),
-        ],
-      ),
-    );
-
-    if (shouldContinue != true) return;
-
+    // Directly open cropper (no preview dialog)
     final croppedFile = await ImageCropper().cropImage(
       sourcePath: imageFile.path,
       aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
