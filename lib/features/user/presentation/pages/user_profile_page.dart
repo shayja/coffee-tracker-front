@@ -7,6 +7,8 @@ import 'package:coffee_tracker/features/user/presentation/bloc/user_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:image_cropper/image_cropper.dart';
 
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
@@ -38,18 +40,68 @@ class _UserProfilePageState extends State<UserProfilePage> {
       source: ImageSource.gallery,
     );
     if (pickedFile != null) {
-      final file = File(pickedFile.path);
-      setState(() {
-        _pickedImage = file;
-      });
-      context.read<UserBloc>().add(UploadUserAvatar(file));
+      File imageFile = File(pickedFile.path);
+
+      // Show preview dialog with move/zoom (photo_view)
+      final shouldContinue = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text("Preview Image"),
+          content: SizedBox(
+            width: 300,
+            height: 300,
+            child: PhotoView(
+              imageProvider: FileImage(imageFile),
+              minScale: PhotoViewComputedScale.contained,
+              maxScale: PhotoViewComputedScale.covered * 2.0,
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () => Navigator.of(ctx).pop(false),
+            ),
+            ElevatedButton(
+              child: Text('Crop'),
+              onPressed: () => Navigator.of(ctx).pop(true),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldContinue != true) return;
+
+      // Now crop image
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: imageFile.path,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1), // Square crop
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Avatar',
+            toolbarColor: Colors.deepOrange,
+            toolbarWidgetColor: Colors.white,
+            lockAspectRatio: true, // Forces square crop
+          ),
+          IOSUiSettings(
+            title: 'Crop Avatar',
+            aspectRatioLockEnabled: true, // Forces square crop on iOS
+            aspectRatioPickerButtonHidden: true,
+          ),
+        ],
+      );
+
+      if (croppedFile != null) {
+        setState(() {
+          _pickedImage = File(croppedFile.path);
+        });
+        context.read<UserBloc>().add(UploadUserAvatar(_pickedImage!));
+      }
     }
   }
 
   void _saveProfile() {
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
-
     context.read<UserBloc>().add(UpdateUserProfile(name: name, email: email));
   }
 
