@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:photo_view/photo_view.dart';
 
 typedef AvatarUploadCallback = Future<void> Function(File croppedFile);
 
@@ -12,10 +11,10 @@ class ProfileAvatarEditor extends StatefulWidget {
   final AvatarUploadCallback onAvatarChanged;
 
   const ProfileAvatarEditor({
-    Key? key,
+    super.key,
     required this.onAvatarChanged,
     this.avatarUrl,
-  }) : super(key: key);
+  });
 
   @override
   State<ProfileAvatarEditor> createState() => _ProfileAvatarEditorState();

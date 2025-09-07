@@ -10,13 +10,13 @@ import 'package:local_auth/local_auth.dart';
 class BiometricButton extends StatefulWidget {
   final BiometricService biometricService;
   final String mobile;
-  final BuildContext scaffoldContext;
+  final VoidCallback? onPressed;
 
   const BiometricButton({
     super.key,
     required this.biometricService,
     required this.mobile,
-    required this.scaffoldContext,
+    this.onPressed,
   });
 
   @override
@@ -25,48 +25,62 @@ class BiometricButton extends StatefulWidget {
 
 class _BiometricButtonState extends State<BiometricButton> {
   bool _isAuthenticating = false;
+  late final AuthBloc _authBloc;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _authBloc = context.read<AuthBloc>();
+  }
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
-      bloc: widget.scaffoldContext.read<AuthBloc>(),
+      bloc: _authBloc,
       listener: (context, state) {
-        if (mounted) {
-          if (state is BiometricLoginSuccess || 
-              state is AuthError || 
-              state is AuthBiometricNotAvailable) {
-            setState(() => _isAuthenticating = false);
-          }
-          
-          if (state is AuthError) {
-            ScaffoldMessenger.of(widget.scaffoldContext).showSnackBar(
-              SnackBar(
-                content: Text('❌ ${state.message}'),
-                backgroundColor: Colors.red,
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          }
+        if (!mounted) return;
+
+        if (state is BiometricLoginSuccess ||
+            state is AuthError ||
+            state is AuthBiometricNotAvailable) {
+          setState(() => _isAuthenticating = false);
+        }
+
+        if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ ${state.message}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 2),
+            ),
+          );
         }
       },
       child: FutureBuilder<bool>(
         future: widget.biometricService.isDeviceSupported(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData || !snapshot.data!)
+        builder: (context, supportedSnapshot) {
+          if (supportedSnapshot.connectionState != ConnectionState.done ||
+              !(supportedSnapshot.data ?? false)) {
             return const SizedBox.shrink();
+          }
 
           return FutureBuilder<List<BiometricType>>(
             future: widget.biometricService.getAvailableBiometrics(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData || snapshot.data!.isEmpty)
+            builder: (context, biometricsSnapshot) {
+              if (biometricsSnapshot.connectionState != ConnectionState.done ||
+                  biometricsSnapshot.data == null ||
+                  biometricsSnapshot.data!.isEmpty) {
                 return const SizedBox.shrink();
+              }
+
+              final icon = _getBiometricIcon(biometricsSnapshot.data!.first);
 
               return IconButton(
                 icon: _isAuthenticating
                     ? const CircularProgressIndicator()
-                    : _getBiometricIcon(snapshot.data!.first),
+                    : icon,
                 tooltip: 'Authenticate with biometrics',
-                onPressed: _isAuthenticating ? null : _authenticate,
+                onPressed: _isAuthenticating ? null : _onPressedHandler,
               );
             },
           );
@@ -75,19 +89,26 @@ class _BiometricButtonState extends State<BiometricButton> {
     );
   }
 
+  void _onPressedHandler() {
+    if (widget.onPressed != null) {
+      setState(() => _isAuthenticating = true);
+      widget.onPressed!();
+    } else {
+      _authenticate();
+    }
+  }
+
   Future<void> _authenticate() async {
     setState(() => _isAuthenticating = true);
-
     try {
-      // Directly trigger biometric login event - let AuthBloc handle authentication
-      widget.scaffoldContext.read<AuthBloc>().add(
-        BiometricLoginEvent(mobile: widget.mobile),
-      );
+      _authBloc.add(BiometricLoginEvent(mobile: widget.mobile));
     } catch (e) {
-      ScaffoldMessenger.of(widget.scaffoldContext).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-      );
-      if (mounted) setState(() => _isAuthenticating = false);
+      if (mounted) {
+        setState(() => _isAuthenticating = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 

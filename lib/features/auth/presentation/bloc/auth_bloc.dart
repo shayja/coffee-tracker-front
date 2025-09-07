@@ -135,17 +135,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     debugPrint('_onBiometricLogin started');
     emit(AuthLoading());
 
-    try {
-      debugPrint('Calling biometricLogin use case...');
-      final result = await biometricLogin(NoParams());
-      debugPrint('biometricLogin result: $result');
+    debugPrint('Calling biometricLogin use case...');
+    final result = await biometricLogin(NoParams());
+    debugPrint('biometricLogin result: $result');
 
-      // Handle the result using if-else instead of fold to avoid async callback issues
-      if (result.isLeft()) {
-        // Handle failure case
-        final failure = result.fold((l) => l, (r) => null)!;
+    // Handle the result using if-else instead of fold to avoid async callback issues
+    result.fold(
+      (failure) {
         debugPrint('Biometric login failed: $failure');
-        
         if (failure is BiometricNotAvailableFailure) {
           emit(AuthBiometricNotAvailable());
         } else if (failure is NoStoredTokenFailure) {
@@ -157,16 +154,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         } else {
           emit(AuthError(message: 'Unexpected error: ${failure.toString()}'));
         }
-      } else {
-        // Handle success case
-        final token = result.fold((l) => null, (r) => r)!;
-        debugPrint('Biometric login successful! Token: $token');
-
+      },
+      (token) async {
         try {
-          // Save tokens to main AuthService storage for app-wide use
-          await authService.storage.write(key: 'access_token', value: token.accessToken);
-          await authService.storage.write(key: 'refresh_token', value: token.refreshToken);
-          debugPrint('Tokens saved to main AuthService storage');
+          // Save tokens and check expiry as before...
+
+          await authService.storage.write(
+            key: 'access_token',
+            value: token.accessToken,
+          );
+          await authService.storage.write(
+            key: 'refresh_token',
+            value: token.refreshToken,
+          );
 
           // Check if access token is expired and refresh if needed
           final isExpired = await authService.isTokenExpired(token.accessToken);
@@ -202,11 +202,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           debugPrint('Error saving tokens: $e');
           emit(AuthError(message: 'Failed to save authentication data'));
         }
-      }
-    } catch (e) {
-      debugPrint('Exception in _onBiometricLogin: $e');
-      emit(AuthError(message: 'Unexpected error during biometric login'));
-    }
+      },
+    );
   }
 
   Future<void> _onEnableBiometricLogin(

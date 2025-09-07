@@ -21,16 +21,15 @@ class _LoginPageState extends State<LoginPage> {
   bool _otpSent = false;
   bool _biometricAvailable = false;
   bool _biometricEnabled = false;
-  String? _currentMobile;
 
   @override
   void initState() {
     super.initState();
     context.read<AuthBloc>().add(CheckAuthenticationEvent());
-    _checkBiometricStatus();
+    _initBiometricStatusAndMobile();
   }
 
-  Future<void> _checkBiometricStatus() async {
+  Future<void> _initBiometricStatusAndMobile() async {
     final biometricService = di.sl<BiometricService>();
     final isAvailable = await biometricService.isBiometricAvailable();
     final hasAnyBiometricUser = await biometricService.hasAnyBiometricUser();
@@ -41,10 +40,8 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       _biometricAvailable = isAvailable;
       _biometricEnabled = hasAnyBiometricUser;
-      // Pre-fill mobile if we have a persistent mobile from previous biometric setup
       if (persistentMobile != null && _mobileController.text.isEmpty) {
         _mobileController.text = persistentMobile;
-        _currentMobile = persistentMobile;
       }
     });
   }
@@ -56,15 +53,9 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (!mounted) return;
-          if (state is NavigateToHome) {
-            WidgetsBinding.instance.addPostFrameCallback((_) async {
-              if (!mounted) return;
-              Navigator.pushReplacementNamed(context, '/coffee-tracker');
-            });
-          } else if (state is BiometricLoginSuccess) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              Navigator.pushReplacementNamed(context, '/coffee-tracker');
-            });
+
+          if (state is NavigateToHome || state is BiometricLoginSuccess) {
+            Navigator.pushReplacementNamed(context, '/coffee-tracker');
           } else if (state is OtpSent) {
             setState(() => _otpSent = true);
             ScaffoldMessenger.of(context).showSnackBar(
@@ -103,9 +94,25 @@ class _LoginPageState extends State<LoginPage> {
 
               if (_biometricAvailable && _biometricEnabled) ...[
                 BiometricButton(
-                  scaffoldContext: context,
                   biometricService: di.sl<BiometricService>(),
-                  mobile: _currentMobile?.trim() ?? '',
+                  mobile: _mobileController.text.trim(),
+                  onPressed: () {
+                    final mobile = _mobileController.text.trim();
+                    if (mobile.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Mobile number is required for biometric login',
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+                    context.read<AuthBloc>().add(
+                      BiometricLoginEvent(mobile: mobile),
+                    );
+                  },
                 ),
                 const SizedBox(height: 30),
                 const Divider(),
@@ -127,7 +134,6 @@ class _LoginPageState extends State<LoginPage> {
                   hintText: 'Enter your mobile number',
                 ),
                 keyboardType: TextInputType.phone,
-                onChanged: (value) => _currentMobile = value,
               ),
               const SizedBox(height: 20),
 
@@ -157,9 +163,34 @@ class _LoginPageState extends State<LoginPage> {
                         ? null
                         : () {
                             if (!_otpSent) {
-                              _requestOtp();
+                              if (_mobileController.text.trim().isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Please enter mobile number'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+                              context.read<AuthBloc>().add(
+                                RequestOtpEvent(_mobileController.text.trim()),
+                              );
                             } else {
-                              _verifyOtp();
+                              if (_otpController.text.trim().isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Please enter OTP'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+                              context.read<AuthBloc>().add(
+                                VerifyOtpEvent(
+                                  mobile: _mobileController.text.trim(),
+                                  otp: _otpController.text.trim(),
+                                ),
+                              );
                             }
                           },
                     style: ElevatedButton.styleFrom(
@@ -187,41 +218,6 @@ class _LoginPageState extends State<LoginPage> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  void _requestOtp() {
-    if (_mobileController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter mobile number'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    context.read<AuthBloc>().add(
-      RequestOtpEvent(_mobileController.text.trim()),
-    );
-  }
-
-  void _verifyOtp() {
-    if (_otpController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter OTP'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    context.read<AuthBloc>().add(
-      VerifyOtpEvent(
-        mobile: _mobileController.text.trim(),
-        otp: _otpController.text.trim(),
       ),
     );
   }

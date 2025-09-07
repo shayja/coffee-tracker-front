@@ -1,5 +1,4 @@
 // file: lib/features/settings/presentation/settings_screen.dart
-import 'dart:io';
 
 import 'package:coffee_tracker/core/auth/auth_service.dart';
 import 'package:coffee_tracker/core/auth/biometric_service.dart';
@@ -20,7 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+  const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
