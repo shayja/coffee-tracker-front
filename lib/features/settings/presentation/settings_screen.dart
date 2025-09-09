@@ -9,6 +9,8 @@ import 'package:coffee_tracker/features/settings/presentation/bloc/settings_even
 import 'package:coffee_tracker/features/settings/presentation/bloc/settings_state.dart';
 import 'package:coffee_tracker/features/statistics/presentation/bloc/statistics_bloc.dart';
 import 'package:coffee_tracker/features/statistics/presentation/pages/statistics_page.dart';
+import 'package:coffee_tracker/features/tapering_journey/presentation/bloc/tapering_journey_bloc.dart';
+import 'package:coffee_tracker/features/tapering_journey/presentation/pages/tapering_journey_page.dart';
 import 'package:coffee_tracker/features/user/presentation/bloc/user_bloc.dart';
 import 'package:coffee_tracker/features/user/presentation/bloc/user_event.dart';
 import 'package:coffee_tracker/features/user/presentation/bloc/user_state.dart';
@@ -368,6 +370,22 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
                                 ),
                               );
                             },
+                    ),
+                    const Divider(),
+                    ListTile(
+                      leading: const Icon(Icons.track_changes),
+                      title: const Text('Tapering Journey'),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BlocProvider(
+                              create: (_) => di.sl<TaperingJourneyBloc>(),
+                              child: const TaperingJourneyPage(),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     const Divider(),
                     ListTile(

@@ -1,10 +1,28 @@
 // lib/injection_container.dart
 
+import 'package:coffee_tracker/core/auth/auth_interceptor.dart';
+import 'package:coffee_tracker/core/auth/auth_service.dart';
 import 'package:coffee_tracker/core/auth/biometric_service.dart';
 import 'package:coffee_tracker/core/config/app_config.dart';
+import 'package:coffee_tracker/core/network/network_info.dart';
+import 'package:coffee_tracker/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:coffee_tracker/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:coffee_tracker/features/auth/domain/repositories/auth_repository.dart';
 import 'package:coffee_tracker/features/auth/domain/usecases/biometric_login.dart';
 import 'package:coffee_tracker/features/auth/domain/usecases/enable_biometric_login.dart';
+import 'package:coffee_tracker/features/auth/domain/usecases/is_authenticated.dart';
 import 'package:coffee_tracker/features/auth/domain/usecases/logout.dart';
+import 'package:coffee_tracker/features/auth/domain/usecases/request_otp.dart';
+import 'package:coffee_tracker/features/auth/domain/usecases/verify_otp.dart';
+import 'package:coffee_tracker/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:coffee_tracker/features/coffee_tracker/data/datasources/coffee_tracker_remote_data_source.dart';
+import 'package:coffee_tracker/features/coffee_tracker/data/repositories/coffee_repository_impl.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/repositories/coffee_tracker_repository.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/add_coffee_entry.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/delete_coffee_entry.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/edit_coffee_entry.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/get_daily_coffee_tracker_log.dart';
+import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
 import 'package:coffee_tracker/features/settings/data/datasources/settings_local_data_source.dart';
 import 'package:coffee_tracker/features/statistics/data/datasources/statistics_remote_data_source.dart';
 import 'package:coffee_tracker/features/statistics/data/repositories/statistics_repository_impl.dart';
@@ -17,6 +35,14 @@ import 'package:coffee_tracker/features/settings/domain/repositories/settings_re
 import 'package:coffee_tracker/features/settings/domain/usecases/get_settings.dart';
 import 'package:coffee_tracker/features/settings/domain/usecases/update_setting.dart';
 import 'package:coffee_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:coffee_tracker/features/tapering_journey/data/datasources/tapering_journey_remote_data_source.dart';
+import 'package:coffee_tracker/features/tapering_journey/data/repositories/tapering_journey_repository_impl.dart';
+import 'package:coffee_tracker/features/tapering_journey/domain/repositories/tapering_journey_repository.dart';
+import 'package:coffee_tracker/features/tapering_journey/domain/usecases/create_tapering_journey.dart';
+import 'package:coffee_tracker/features/tapering_journey/domain/usecases/delete_tapering_journey.dart';
+import 'package:coffee_tracker/features/tapering_journey/domain/usecases/get_tapering_journeys.dart';
+import 'package:coffee_tracker/features/tapering_journey/domain/usecases/update_tapering_journey.dart';
+import 'package:coffee_tracker/features/tapering_journey/presentation/bloc/tapering_journey_bloc.dart';
 import 'package:coffee_tracker/features/user/data/datasources/user_remote_data_source.dart';
 import 'package:coffee_tracker/features/user/data/repositories/user_repository_impl.dart';
 import 'package:coffee_tracker/features/user/domain/repositories/user_repository.dart';
@@ -27,26 +53,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http_interceptor/http_interceptor.dart';
-
-import 'core/network/network_info.dart';
-import 'core/auth/auth_service.dart';
-import 'core/auth/auth_interceptor.dart';
-import 'features/coffee_tracker/data/datasources/coffee_tracker_remote_data_source.dart';
-import 'features/coffee_tracker/data/repositories/coffee_repository_impl.dart';
-import 'features/coffee_tracker/domain/repositories/coffee_tracker_repository.dart';
-import 'features/coffee_tracker/domain/usecases/add_coffee_entry.dart';
-import 'features/coffee_tracker/domain/usecases/edit_coffee_entry.dart';
-import 'features/coffee_tracker/domain/usecases/delete_coffee_entry.dart';
-import 'features/coffee_tracker/domain/usecases/get_daily_coffee_tracker_log.dart';
-import 'features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
-
-import 'features/auth/data/datasources/auth_remote_data_source.dart';
-import 'features/auth/data/repositories/auth_repository_impl.dart';
-import 'features/auth/domain/repositories/auth_repository.dart';
-import 'features/auth/domain/usecases/request_otp.dart';
-import 'features/auth/domain/usecases/verify_otp.dart';
-import 'features/auth/domain/usecases/is_authenticated.dart';
-import 'features/auth/presentation/bloc/auth_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -196,6 +202,36 @@ Future<void> init() async {
 
   sl.registerFactory(
     () => SettingsBloc(getSettings: sl(), updateSetting: sl()),
+  );
+
+  //! Features - Tapering Journey
+  sl.registerLazySingleton<TaperingJourneyRemoteDataSource>(
+    () => TaperingJourneyRemoteDataSourceImpl(
+      client: sl(),
+      baseUrl: AppConfig.baseUrl,
+      authService: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<TaperingJourneyRepository>(
+    () => TaperingJourneyRepositoryImpl(
+      remoteDataSource: sl(),
+      networkInfo: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton(() => CreateTaperingJourneyUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateTaperingJourneyUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteTaperingJourneyUseCase(sl()));
+  sl.registerLazySingleton(() => GetTaperingJourneysUseCase(sl()));
+
+  sl.registerFactory(
+    () => TaperingJourneyBloc(
+      createUseCase: sl(),
+      updateUseCase: sl(),
+      deleteUseCase: sl(),
+      getJourneysUseCase: sl(),
+    ),
   );
 
   //! Register BiometricService

@@ -1,10 +1,13 @@
 // coffee_tracker/lib/features/coffee_tracker/presentation/pages/coffee_tracker_page.dart
+
+import 'package:coffee_tracker/core/widgets/add_button.dart';
 import 'package:coffee_tracker/core/widgets/app_scaffold.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_state.dart';
-import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/add_coffee_button.dart';
+import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/coffee_entry_data.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/coffee_log_list.dart';
+import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/show_coffee_entry_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -63,58 +66,26 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
         title: const Text('☕ Daily Coffee Tracker'),
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: AddCoffeeButton(selectedDate: selectedDate),
+          child: AddButton<CoffeeEntryData>(
+            initialData: CoffeeEntryData(dateTime: selectedDate),
+            showDialogFn: showCoffeeEntryDialog,
+            onAdd: (data) {
+              context.read<CoffeeTrackerBloc>().add(
+                AddCoffeeEntry(
+                  timestamp: data.dateTime,
+                  notes: data.description,
+                ),
+              );
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Saved for ${DateFormat("dd/MM/yyyy").format(data.dateTime)}',
+                  ),
+                ),
+              );
+            },
+          ),
         ),
-        // actions: [
-        //   IconButton(
-        //     icon: const Icon(Icons.bar_chart),
-        //     onPressed: () {
-        //       Navigator.push(
-        //         context,
-        //         MaterialPageRoute(
-        //           builder: (context) => BlocProvider.value(
-        //             value: BlocProvider.of<StatisticsBloc>(context),
-        //             child: const StatisticsPage(),
-        //           ),
-        //         ),
-        //       );
-        //     },
-        //   ),
-        //   IconButton(
-        //     icon: const Icon(Icons.logout),
-        //     onPressed: () async {
-        //       // Show confirmation
-        //       final shouldLogout = await showDialog<bool>(
-        //         context: context,
-        //         builder: (context) => AlertDialog(
-        //           title: const Text('Logout'),
-        //           content: const Text('Are you sure you want to logout?'),
-        //           actions: [
-        //             TextButton(
-        //               onPressed: () => Navigator.pop(context, false),
-        //               child: const Text('Cancel'),
-        //             ),
-        //             TextButton(
-        //               onPressed: () => Navigator.pop(context, true),
-        //               child: const Text('Logout'),
-        //             ),
-        //           ],
-        //         ),
-        //       );
-
-        //       if (shouldLogout == true) {
-        //         // Call your existing AuthService logout
-        //         await di.sl<AuthService>().logout();
-
-        //         // Navigate to login
-        //         Navigator.of(context).pushAndRemoveUntil(
-        //           MaterialPageRoute(builder: (context) => const LoginPage()),
-        //           (route) => false,
-        //         );
-        //       }
-        //     },
-        //   ),
-        // ],
       ),
       body: Column(
         children: [

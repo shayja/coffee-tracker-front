@@ -9,8 +9,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class AppScaffold extends StatelessWidget {
   final AppBar? appBar;
   final Widget body;
+  final Widget? floatingActionButton;
 
-  const AppScaffold({super.key, this.appBar, required this.body});
+  const AppScaffold({
+    super.key,
+    this.appBar,
+    required this.body,
+    this.floatingActionButton,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +46,7 @@ class AppScaffold extends StatelessWidget {
             )
           : null,
       body: body,
+      floatingActionButton: floatingActionButton,
     );
   }
 }
