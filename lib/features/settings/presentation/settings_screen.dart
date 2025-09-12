@@ -2,20 +2,17 @@
 
 import 'package:coffee_tracker/core/auth/auth_service.dart';
 import 'package:coffee_tracker/core/auth/biometric_service.dart';
-import 'package:coffee_tracker/features/auth/presentation/pages/login_page.dart';
+import 'package:coffee_tracker/core/utils/snackbar_utils.dart';
+import 'package:coffee_tracker/core/widgets/app_drawer.dart';
 import 'package:coffee_tracker/features/settings/domain/entities/setting_type.dart';
 import 'package:coffee_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:coffee_tracker/features/settings/presentation/bloc/settings_event.dart';
 import 'package:coffee_tracker/features/settings/presentation/bloc/settings_state.dart';
-import 'package:coffee_tracker/features/statistics/presentation/bloc/statistics_bloc.dart';
-import 'package:coffee_tracker/features/statistics/presentation/pages/statistics_page.dart';
-import 'package:coffee_tracker/features/tapering_journey/presentation/bloc/tapering_journey_bloc.dart';
-import 'package:coffee_tracker/features/tapering_journey/presentation/pages/tapering_journey_page.dart';
+import 'package:coffee_tracker/features/settings/presentation/widgets/logout_dialog.dart';
+import 'package:coffee_tracker/features/settings/presentation/widgets/profile_section.dart';
+import 'package:coffee_tracker/features/settings/presentation/widgets/settings_tile.dart';
 import 'package:coffee_tracker/features/user/presentation/bloc/user_bloc.dart';
 import 'package:coffee_tracker/features/user/presentation/bloc/user_event.dart';
-import 'package:coffee_tracker/features/user/presentation/bloc/user_state.dart';
-import 'package:coffee_tracker/features/user/presentation/pages/user_profile_page.dart';
-import 'package:coffee_tracker/features/user/presentation/widgets/profile_avatar_editor.dart';
 import 'package:coffee_tracker/injection_container.dart' as di;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -71,27 +68,15 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
       final refreshToken = await authService.storage.read(key: 'refresh_token');
 
       if (accessToken == null || refreshToken == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Please login first to enable biometric authentication',
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showError('Please login first to enable biometric authentication');
         return;
       }
 
       final mobile = await authService.getCurrentUserMobile();
 
       if (mobile == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Unable to determine user mobile number. Please logout and login again.',
-            ),
-            backgroundColor: Colors.red,
-          ),
+        _showError(
+          'Unable to determine user mobile number. Please logout and login again.',
         );
         return;
       }
@@ -103,111 +88,78 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
           accessToken,
           refreshToken,
         );
-        setState(() {
-          _persistentMobile = mobile;
-        });
-
-        context.read<SettingsBloc>().add(
-          UpdateSettingEvent(
-            settingId: SettingType.biometricEnabled.id,
-            value: true,
-          ),
-        );
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Biometric login enabled successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        _handleBiometricEnabled(mobile);
       }
     } else {
       await biometricService.disableBiometricLogin();
-
-      context.read<SettingsBloc>().add(
-        UpdateSettingEvent(
-          settingId: SettingType.biometricEnabled.id,
-          value: false,
-        ),
-      );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Biometric login disabled'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      _handleBiometricDisabled();
     }
+  }
+
+  void _showError(String message) {
+    if (mounted) {
+      SnackBarUtils.showError(context, message);
+    }
+  }
+
+  void _handleBiometricEnabled(String mobile) {
+    if (!mounted) return;
+
+    setState(() {
+      _persistentMobile = mobile;
+    });
+
+    context.read<SettingsBloc>().add(
+      UpdateSettingEvent(
+        settingId: SettingType.biometricEnabled.id,
+        value: true,
+      ),
+    );
+
+    SnackBarUtils.showSuccess(context, 'Biometric login enabled successfully');
+  }
+
+  void _handleBiometricDisabled() {
+    if (!mounted) return;
+
+    context.read<SettingsBloc>().add(
+      UpdateSettingEvent(
+        settingId: SettingType.biometricEnabled.id,
+        value: false,
+      ),
+    );
+
+    SnackBarUtils.showWarning(context, 'Biometric login disabled');
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("⚙️ Settings")),
-      body: Column(
-        children: [
-          // 🔹 Profile Section
-          BlocBuilder<UserBloc, UserState>(
-            builder: (context, state) {
-              if (state is UserLoading) {
-                return const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: CircularProgressIndicator(),
-                );
-              } else if (state is UserLoaded) {
-                final user = state.user;
-                return Column(
-                  children: [
-                    const SizedBox(height: 20),
-                    ProfileAvatarEditor(
-                      avatarUrl: user.avatarUrl,
-                      onAvatarChanged: (croppedFile) async {
-                        context.read<UserBloc>().add(
-                          UploadUserAvatar(croppedFile),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      user.name ?? 'No name',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    Text(
-                      user.email ?? '',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton.icon(
-                      icon: const Icon(Icons.edit),
-                      label: const Text("Edit Profile"),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const UserProfilePage(),
-                          ),
-                        );
-                      },
-                    ),
-                    const Divider(thickness: 1),
-                  ],
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
+    final theme = Theme.of(context);
 
-          // 🔹 Rest of settings
-          Expanded(
-            child: BlocConsumer<SettingsBloc, SettingsState>(
+    return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
+      drawer: const AppDrawer(),
+      appBar: AppBar(
+        title: const Text("Settings"),
+        elevation: 0,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu_rounded),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Profile Section
+            const ProfileSection(),
+
+            // Settings Content
+            BlocConsumer<SettingsBloc, SettingsState>(
               listener: (context, state) {
                 if (state is SettingsError) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error: ${state.message}'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
+                  SnackBarUtils.showError(context, state.message);
                 }
               },
               builder: (context, state) {
@@ -250,200 +202,126 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
 
                 final isUpdating = state is SettingsUpdating;
 
-                return ListView(
+                return Column(
                   children: [
-                    // Biometric Login Section
-                    if (_biometricAvailable) ...[
-                      SwitchListTile(
-                        secondary:
-                            isUpdating &&
+                    // Security Section
+                    SettingsSection(
+                      title: 'SECURITY',
+                      children: [
+                        // Biometric Login
+                        if (_biometricAvailable) ...[
+                          SettingsSwitchTile(
+                            leading: const Icon(Icons.fingerprint),
+                            title: 'Biometric Login',
+                            subtitle: settings.biometricEnabled
+                                ? 'Quick access with fingerprint or face'
+                                : 'Enable biometric authentication',
+                            value: settings.biometricEnabled,
+                            isLoading:
+                                isUpdating &&
                                 state.updatingSettingId ==
-                                    SettingType.biometricEnabled.id
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.fingerprint),
-                        title: const Text("Biometric Login"),
-                        subtitle: Text(
-                          settings.biometricEnabled
-                              ? "Biometric login is enabled"
-                              : "Enable fingerprint/face login for faster access",
-                        ),
-                        value: settings.biometricEnabled,
-                        onChanged:
-                            isUpdating &&
-                                state.updatingSettingId ==
-                                    SettingType.biometricEnabled.id
-                            ? null
-                            : (value) => _toggleBiometric(
-                                value,
-                                settings.biometricEnabled,
-                              ),
-                      ),
-                      if (_persistentMobile != null)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Text(
-                            "Configured for: $_persistentMobile",
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: Colors.grey[600]),
-                          ),
-                        ),
-                    ] else ...[
-                      ListTile(
-                        leading: Icon(
-                          Icons.fingerprint,
-                          color: Colors.grey[400],
-                        ),
-                        title: const Text("Biometric Login"),
-                        subtitle: const Text(
-                          "Biometric hardware not available on this device",
-                        ),
-                        enabled: false,
-                      ),
-                    ],
-                    const Divider(),
-                    SwitchListTile(
-                      secondary:
-                          isUpdating &&
-                              state.updatingSettingId == SettingType.darkMode.id
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.dark_mode),
-                      title: const Text("Dark Mode"),
-                      subtitle: Text(
-                        settings.darkMode
-                            ? "Dark mode is enabled"
-                            : "Switch to dark theme for comfortable viewing",
-                      ),
-                      value: settings.darkMode,
-                      onChanged:
-                          isUpdating &&
-                              state.updatingSettingId == SettingType.darkMode.id
-                          ? null
-                          : (value) {
-                              context.read<SettingsBloc>().add(
-                                UpdateSettingEvent(
-                                  settingId: SettingType.darkMode.id,
-                                  value: value,
-                                ),
-                              );
-                            },
-                    ),
-                    const Divider(),
-                    SwitchListTile(
-                      secondary:
-                          isUpdating &&
-                              state.updatingSettingId ==
-                                  SettingType.notificationsEnabled.id
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.notification_add),
-                      title: const Text("Notifications"),
-                      subtitle: Text(
-                        settings.darkMode
-                            ? "Notifications are enabled"
-                            : "Enable Notifications",
-                      ),
-                      value: settings.notificationsEnabled,
-                      onChanged:
-                          isUpdating &&
-                              state.updatingSettingId ==
-                                  SettingType.notificationsEnabled.id
-                          ? null
-                          : (value) {
-                              context.read<SettingsBloc>().add(
-                                UpdateSettingEvent(
-                                  settingId:
-                                      SettingType.notificationsEnabled.id,
-                                  value: value,
-                                ),
-                              );
-                            },
-                    ),
-                    const Divider(),
-                    ListTile(
-                      leading: const Icon(Icons.track_changes),
-                      title: const Text('Tapering Journey'),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => BlocProvider(
-                              create: (_) => di.sl<TaperingJourneyBloc>(),
-                              child: const TaperingJourneyPage(),
+                                    SettingType.biometricEnabled.id,
+                            onChanged: (value) => _toggleBiometric(
+                              value,
+                              settings.biometricEnabled,
                             ),
                           ),
-                        );
-                      },
-                    ),
-                    const Divider(),
-                    ListTile(
-                      leading: const Icon(Icons.bar_chart),
-                      title: const Text("Stats"),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => BlocProvider.value(
-                              value: BlocProvider.of<StatisticsBloc>(context),
-                              child: const StatisticsPage(),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.logout),
-                      title: const Text("Logout"),
-                      onTap: () async {
-                        final shouldLogout = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Logout'),
-                            content: const Text(
-                              'Are you sure you want to logout?',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancel'),
+                          if (_persistentMobile != null)
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(32, 0, 32, 8),
+                              child: Text(
+                                'Configured for: $_persistentMobile',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                ),
                               ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Logout'),
-                              ),
-                            ],
+                            ),
+                        ] else
+                          SettingsTile(
+                            leading: const Icon(Icons.fingerprint),
+                            title: 'Biometric Login',
+                            subtitle: 'Biometric hardware not available',
+                            enabled: false,
                           ),
-                        );
+                      ],
+                    ),
 
-                        if (shouldLogout == true) {
-                          await di.sl<AuthService>().logout();
-                          Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(
-                              builder: (context) => const LoginPage(),
-                            ),
-                            (route) => false,
-                          );
-                        }
-                      },
+                    // Appearance Section
+                    SettingsSection(
+                      title: 'APPEARANCE',
+                      children: [
+                        SettingsSwitchTile(
+                          leading: const Icon(Icons.dark_mode_rounded),
+                          title: 'Dark Mode',
+                          subtitle: settings.darkMode
+                              ? 'Dark theme is active'
+                              : 'Switch to dark theme',
+                          value: settings.darkMode,
+                          isLoading:
+                              isUpdating &&
+                              state.updatingSettingId ==
+                                  SettingType.darkMode.id,
+                          onChanged: (value) {
+                            context.read<SettingsBloc>().add(
+                              UpdateSettingEvent(
+                                settingId: SettingType.darkMode.id,
+                                value: value,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
+
+                    // Notifications Section
+                    SettingsSection(
+                      title: 'NOTIFICATIONS',
+                      children: [
+                        SettingsSwitchTile(
+                          leading: const Icon(Icons.notifications_rounded),
+                          title: 'Push Notifications',
+                          subtitle: settings.notificationsEnabled
+                              ? 'Stay updated with reminders'
+                              : 'Enable notifications',
+                          value: settings.notificationsEnabled,
+                          isLoading:
+                              isUpdating &&
+                              state.updatingSettingId ==
+                                  SettingType.notificationsEnabled.id,
+                          onChanged: (value) {
+                            context.read<SettingsBloc>().add(
+                              UpdateSettingEvent(
+                                settingId: SettingType.notificationsEnabled.id,
+                                value: value,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+
+                    // Account Section
+                    SettingsSection(
+                      title: 'ACCOUNT',
+                      children: [
+                        SettingsTile(
+                          leading: const Icon(Icons.logout_rounded),
+                          title: 'Logout',
+                          subtitle: 'Sign out from your account',
+                          onTap: () => LogoutDialog.show(context),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 32),
                   ],
                 );
               },
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

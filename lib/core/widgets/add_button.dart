@@ -10,11 +10,11 @@ class AddButton<T> extends StatelessWidget {
   final void Function(T data) onAdd;
 
   const AddButton({
-    Key? key,
+    super.key,
     required this.initialData,
     required this.showDialogFn,
     required this.onAdd,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

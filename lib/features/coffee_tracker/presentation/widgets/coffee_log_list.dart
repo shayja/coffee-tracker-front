@@ -23,7 +23,7 @@ class CoffeeLogList extends StatelessWidget {
         ).format(entry.timestamp.toLocal());
 
         return ListTile(
-          title: Text(entry.notes.isNotEmpty ? entry.notes : ''),
+          title: Text(entry.notes ?? ''),
           subtitle: Text(timeString),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,

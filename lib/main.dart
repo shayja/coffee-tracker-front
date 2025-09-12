@@ -1,4 +1,5 @@
 import 'package:coffee_tracker/core/bloc/app_bloc_observer.dart';
+import 'package:coffee_tracker/core/theme/app_theme.dart';
 import 'package:coffee_tracker/features/tapering_journey/presentation/bloc/tapering_journey_bloc.dart';
 import 'package:coffee_tracker/features/tapering_journey/presentation/pages/tapering_journey_page.dart';
 import 'package:coffee_tracker/features/user/presentation/bloc/user_bloc.dart';
@@ -50,20 +51,8 @@ class CoffeeTrackerApp extends StatelessWidget {
 
           return MaterialApp(
             title: 'Coffee Tracker ☕',
-            theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.brown,
-                brightness: Brightness.light,
-              ),
-              useMaterial3: true,
-            ),
-            darkTheme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.brown,
-                brightness: Brightness.dark,
-              ),
-              useMaterial3: true,
-            ),
+            theme: AppTheme.lightTheme(),
+            darkTheme: AppTheme.darkTheme(),
             themeMode: darkMode ? ThemeMode.dark : ThemeMode.light,
             home: BlocBuilder<AuthBloc, AuthState>(
               builder: (context, authState) {

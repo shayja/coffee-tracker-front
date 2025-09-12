@@ -2,13 +2,9 @@
 class CoffeeTrackerEntry {
   final String id;
   final DateTime timestamp;
-  final String notes;
+  final String? notes;
 
-  CoffeeTrackerEntry({
-    required this.id,
-    required this.timestamp,
-    required this.notes,
-  });
+  CoffeeTrackerEntry({required this.id, required this.timestamp, this.notes});
 
   CoffeeTrackerEntry copyWith({
     String? id,
@@ -31,7 +27,7 @@ class CoffeeTrackerEntry {
     );
   }
 
-  // Convert to JSON for creating new entry with proper timestamp format
+  // Convert to JSON for creating new entry
   Map<String, dynamic> toCreateJson() {
     return {'timestamp': _formatTimestampForGo(timestamp), 'notes': notes};
   }
@@ -44,10 +40,7 @@ class CoffeeTrackerEntry {
     };
   }
 
-  // Helper method to format timestamp for backend
   String _formatTimestampForGo(DateTime timestamp) {
-    // Format for Go time.Time: RFC3339 format "2006-01-02T15:04:05Z07:00"
-    // Convert to UTC and use toIso8601String()
     return timestamp.toUtc().toIso8601String();
   }
 

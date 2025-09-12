@@ -63,7 +63,7 @@ Future<bool?> showAddTaperingJourneyDialog(
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
-                    value: goalFrequency,
+                    initialValue: goalFrequency,
                     decoration: const InputDecoration(
                       labelText: 'Goal Frequency',
                     ),
