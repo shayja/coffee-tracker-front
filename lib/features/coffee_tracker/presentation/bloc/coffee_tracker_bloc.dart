@@ -1,3 +1,4 @@
+import 'package:coffee_tracker/core/utils/location_utils.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_tracker_entry.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/add_coffee_entry.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/delete_coffee_entry.dart';
@@ -37,10 +38,14 @@ class CoffeeTrackerBloc extends Bloc<CoffeeTrackerEvent, CoffeeTrackerState> {
   ) async {
     emit(CoffeeTrackerLoading());
 
+    final position = await getCurrentPosition();
+
     final entry = CoffeeTrackerEntry(
       id: const Uuid().v4(), // This is fine for client-side ID
       timestamp: event.timestamp,
       notes: event.notes,
+      latitude: position.latitude,
+      longitude: position.longitude
     );
 
     final result = await addCoffeeEntry(AddCoffeeEntryParams(entry));

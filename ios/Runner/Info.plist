@@ -3,7 +3,17 @@
 <plist version="1.0">
 <dict>
 
- <!-- ===== NETWORK SECURITY ===== -->
+	<!-- ===== NETWORK SECURITY ===== -->
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs access to your location while it is running.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs access to your location at all times.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs access to your location both in the foreground and background.</string>
+
+
+ 	<!-- ===== NETWORK SECURITY ===== -->
     <key>NSAppTransportSecurity</key>
     <dict>
         <!-- Allow HTTPS requests to your specific domain -->
