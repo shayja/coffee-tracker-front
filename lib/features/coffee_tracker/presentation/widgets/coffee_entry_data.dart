@@ -3,6 +3,11 @@
 class CoffeeEntryData {
   DateTime dateTime;
   String description;
+  int? coffeeTypeKey;
 
-  CoffeeEntryData({required this.dateTime, this.description = ''});
+  CoffeeEntryData({
+    required this.dateTime,
+    this.description = '',
+    this.coffeeTypeKey,
+  });
 }

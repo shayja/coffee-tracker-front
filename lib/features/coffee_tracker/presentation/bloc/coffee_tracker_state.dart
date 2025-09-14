@@ -1,4 +1,5 @@
 import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_tracker_entry.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_type.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class CoffeeTrackerState extends Equatable {
@@ -30,4 +31,21 @@ class CoffeeTrackerError extends CoffeeTrackerState {
 
   @override
   List<Object?> get props => [message];
+}
+
+abstract class CoffeeTypesState {}
+
+class CoffeeTypesInitial extends CoffeeTypesState {}
+
+class CoffeeTypesLoading extends CoffeeTypesState {}
+
+class CoffeeTypesLoaded extends CoffeeTypesState {
+  final List<CoffeeType> coffeeTypes;
+
+  CoffeeTypesLoaded(this.coffeeTypes);
+}
+
+class CoffeeTypesError extends CoffeeTypesState {
+  final String message;
+  CoffeeTypesError(this.message);
 }

@@ -16,11 +16,15 @@ import 'package:coffee_tracker/features/auth/domain/usecases/request_otp.dart';
 import 'package:coffee_tracker/features/auth/domain/usecases/verify_otp.dart';
 import 'package:coffee_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:coffee_tracker/features/coffee_tracker/data/datasources/coffee_tracker_remote_data_source.dart';
+import 'package:coffee_tracker/features/coffee_tracker/data/datasources/generic_kv_remote_data_source.dart';
 import 'package:coffee_tracker/features/coffee_tracker/data/repositories/coffee_repository_impl.dart';
+import 'package:coffee_tracker/features/coffee_tracker/data/repositories/generic_kv_repository_impl.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/repositories/coffee_tracker_repository.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/repositories/generic_kv_repository.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/add_coffee_entry.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/delete_coffee_entry.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/edit_coffee_entry.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/get_coffee_types.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/get_daily_coffee_tracker_log.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
 import 'package:coffee_tracker/features/settings/data/datasources/settings_local_data_source.dart';
@@ -90,6 +94,14 @@ Future<void> init() async {
     ),
   );
 
+  sl.registerLazySingleton<GenericKVRemoteDataSource>(
+    () => GenericKVRemoteDataSourceImpl(
+      client: sl(),
+      baseUrl: AppConfig.baseUrl,
+      authService: sl(),
+    ),
+  );
+
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(authService: sl()),
   );
@@ -114,6 +126,9 @@ Future<void> init() async {
   sl.registerLazySingleton<UserRepository>(
     () => UserRepositoryImpl(remoteDataSource: sl()),
   );
+  sl.registerLazySingleton<GenericKVRepository>(
+    () => GenericKVRepositoryImpl(remoteDataSource: sl()),
+  );
 
   // Use cases
   sl.registerLazySingleton(() => AddCoffeeEntryUseCase(sl()));
@@ -127,6 +142,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => Logout(sl()));
   sl.registerLazySingleton(() => BiometricLogin(sl()));
   sl.registerLazySingleton(() => EnableBiometricLogin(sl()));
+  sl.registerLazySingleton<GetCoffeeTypesUseCase>(
+    () => GetCoffeeTypesUseCase(sl<GenericKVRepository>()),
+  );
 
   // Bloc (factory because we want new instance per screen)
   sl.registerFactory(
@@ -150,6 +168,10 @@ Future<void> init() async {
     ),
   );
   sl.registerFactory(() => UserBloc(userRepository: sl()));
+
+  sl.registerFactory<CoffeeTypesBloc>(
+    () => CoffeeTypesBloc(sl<GetCoffeeTypesUseCase>()),
+  );
 
   //! Features - Statistics
   sl.registerLazySingleton<StatisticsRemoteDataSource>(

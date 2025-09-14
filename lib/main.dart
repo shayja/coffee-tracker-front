@@ -1,5 +1,6 @@
 import 'package:coffee_tracker/core/bloc/app_bloc_observer.dart';
 import 'package:coffee_tracker/core/theme/app_theme.dart';
+import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
 import 'package:coffee_tracker/features/tapering_journey/presentation/bloc/tapering_journey_bloc.dart';
 import 'package:coffee_tracker/features/tapering_journey/presentation/pages/tapering_journey_page.dart';
 import 'package:coffee_tracker/features/user/presentation/bloc/user_bloc.dart';
@@ -37,7 +38,9 @@ class CoffeeTrackerApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<AuthBloc>()),
         BlocProvider(create: (_) => di.sl<CoffeeTrackerBloc>()),
         BlocProvider(create: (_) => di.sl<StatisticsBloc>()),
-        BlocProvider(create: (_) => di.sl<SettingsBloc>()..add(LoadSettings())),
+        BlocProvider(
+          create: (_) => di.sl<CoffeeTypesBloc>()..add(LoadCoffeeTypes()),
+        ),
       ],
       child: BlocBuilder<SettingsBloc, SettingsState>(
         builder: (context, state) {

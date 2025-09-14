@@ -12,8 +12,13 @@ abstract class CoffeeTrackerEvent extends Equatable {
 class AddCoffeeEntry extends CoffeeTrackerEvent {
   final DateTime timestamp;
   final String notes;
+  final int? coffeeTypeKey;
 
-  const AddCoffeeEntry({required this.timestamp, required this.notes});
+  const AddCoffeeEntry({
+    required this.timestamp,
+    required this.notes,
+    this.coffeeTypeKey,
+  });
 
   @override
   List<Object?> get props => [timestamp, notes];
@@ -43,4 +48,9 @@ class DeleteCoffeeEntry extends CoffeeTrackerEvent {
 
   @override
   List<Object?> get props => [entry];
+}
+
+class LoadCoffeeTypes extends Equatable {
+  @override
+  List<Object?> get props => [];
 }

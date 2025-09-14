@@ -5,6 +5,7 @@ class CoffeeTrackerEntry {
   final String? notes;
   final double? latitude;
   final double? longitude;
+  final int? coffeeType;
 
   CoffeeTrackerEntry({
     required this.id,
@@ -12,6 +13,7 @@ class CoffeeTrackerEntry {
     this.notes,
     this.latitude,
     this.longitude,
+    this.coffeeType,
   }) {
     if (id.isEmpty) {
       throw ArgumentError('ID cannot be empty');
@@ -39,6 +41,7 @@ class CoffeeTrackerEntry {
     String? notes,
     double? latitude,
     double? longitude,
+    int? coffeeType,
   }) {
     return CoffeeTrackerEntry(
       id: '', // Will be assigned by server
@@ -46,6 +49,7 @@ class CoffeeTrackerEntry {
       notes: notes,
       latitude: latitude,
       longitude: longitude,
+      coffeeType: coffeeType,
     );
   }
 
@@ -55,6 +59,7 @@ class CoffeeTrackerEntry {
     String? notes,
     double? latitude,
     double? longitude,
+    int? coffeeType,
   }) {
     return CoffeeTrackerEntry(
       id: id ?? this.id,
@@ -62,6 +67,7 @@ class CoffeeTrackerEntry {
       notes: notes ?? this.notes,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      coffeeType: coffeeType ?? this.coffeeType,
     );
   }
 
@@ -78,6 +84,7 @@ class CoffeeTrackerEntry {
       longitude: json['longitude'] != null
           ? (json['longitude'] as num).toDouble()
           : null,
+      coffeeType: json['coffeeType'] as int?,
     );
   }
 
@@ -88,6 +95,7 @@ class CoffeeTrackerEntry {
       'notes': notes,
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
+      if (coffeeType != null) 'coffeeType': coffeeType,
     };
   }
 
@@ -97,6 +105,7 @@ class CoffeeTrackerEntry {
       'notes': notes,
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
+      if (coffeeType != null) 'coffeeType': coffeeType,
     };
   }
 
@@ -122,7 +131,7 @@ class CoffeeTrackerEntry {
   @override
   String toString() {
     return 'CoffeeTrackerEntry{id: $id, timestamp: $timestamp, notes: $notes, '
-        'latitude: $latitude, longitude: $longitude}';
+        'latitude: $latitude, longitude: $longitude, coffeeType: $coffeeType}';
   }
 
   @override
@@ -134,8 +143,10 @@ class CoffeeTrackerEntry {
           timestamp.isAtSameMomentAs(other.timestamp) &&
           notes == other.notes &&
           latitude == other.latitude &&
-          longitude == other.longitude;
+          longitude == other.longitude &&
+          coffeeType == other.coffeeType;
 
   @override
-  int get hashCode => Object.hash(id, timestamp, notes, latitude, longitude);
+  int get hashCode =>
+      Object.hash(id, timestamp, notes, latitude, longitude, coffeeType);
 }

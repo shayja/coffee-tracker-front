@@ -1,5 +1,6 @@
 // lib/features/coffee_tracker/data/datasources/coffee_tracker_remote_data_source.dart
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:coffee_tracker/core/auth/auth_service.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_tracker_entry.dart';
@@ -85,6 +86,7 @@ class CoffeeTrackerRemoteDataSourceImpl
   Future<CoffeeTrackerEntry> addEntry(CoffeeTrackerEntry entry) async {
     //debugPrint(entry.timestamp.toIso8601String());
     final jsonBody = jsonEncode(entry.toCreateJson());
+    debugPrint('Request body: $jsonBody');
 
     final response = await client.post(
       Uri.parse('$baseUrl/entries'),

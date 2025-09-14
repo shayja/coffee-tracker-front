@@ -3,6 +3,7 @@ import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_tr
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/add_coffee_entry.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/delete_coffee_entry.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/edit_coffee_entry.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/get_coffee_types.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/get_daily_coffee_tracker_log.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_state.dart';
@@ -45,7 +46,8 @@ class CoffeeTrackerBloc extends Bloc<CoffeeTrackerEvent, CoffeeTrackerState> {
       timestamp: event.timestamp,
       notes: event.notes,
       latitude: position.latitude,
-      longitude: position.longitude
+      longitude: position.longitude,
+      coffeeType: event.coffeeTypeKey,
     );
 
     final result = await addCoffeeEntry(AddCoffeeEntryParams(entry));
@@ -133,5 +135,20 @@ class CoffeeTrackerBloc extends Bloc<CoffeeTrackerEvent, CoffeeTrackerState> {
       (failure) => emit(CoffeeTrackerError(onErrorMessage)),
       (entries) => emit(CoffeeTrackerLoaded(entries)),
     );
+  }
+}
+
+class CoffeeTypesBloc extends Bloc<LoadCoffeeTypes, CoffeeTypesState> {
+  final GetCoffeeTypesUseCase getCoffeeTypesUseCase;
+
+  CoffeeTypesBloc(this.getCoffeeTypesUseCase) : super(CoffeeTypesInitial()) {
+    on<LoadCoffeeTypes>((event, emit) async {
+      emit(CoffeeTypesLoading());
+      final result = await getCoffeeTypesUseCase.execute();
+      result.fold(
+        (failure) => emit(CoffeeTypesError(failure.toString())),
+        (coffeeTypes) => emit(CoffeeTypesLoaded(coffeeTypes)),
+      );
+    });
   }
 }

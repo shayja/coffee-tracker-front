@@ -2,6 +2,7 @@
 
 import 'package:coffee_tracker/core/widgets/add_button.dart';
 import 'package:coffee_tracker/core/widgets/app_scaffold.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_type.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_state.dart';
@@ -61,6 +62,12 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final coffeeTypes = context.select<CoffeeTypesBloc, List<CoffeeType>>(
+      (bloc) => (bloc.state is CoffeeTypesLoaded)
+          ? (bloc.state as CoffeeTypesLoaded).coffeeTypes
+          : [],
+    );
+
     return AppScaffold(
       appBar: AppBar(
         title: const Text('☕ Daily Coffee Tracker'),
@@ -68,12 +75,14 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
           padding: const EdgeInsets.all(8.0),
           child: AddButton<CoffeeEntryData>(
             initialData: CoffeeEntryData(dateTime: selectedDate),
-            showDialogFn: showCoffeeEntryDialog,
+            showDialogFn: (context, data) =>
+                showCoffeeEntryDialog(context, data, coffeeTypes: coffeeTypes),
             onAdd: (data) {
               context.read<CoffeeTrackerBloc>().add(
                 AddCoffeeEntry(
                   timestamp: data.dateTime,
                   notes: data.description,
+                  coffeeTypeKey: data.coffeeTypeKey,
                 ),
               );
               ScaffoldMessenger.of(context).showSnackBar(
