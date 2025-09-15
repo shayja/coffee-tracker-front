@@ -29,38 +29,32 @@ class _CoffeeTypeSelectionListState extends State<CoffeeTypeSelectionList> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      shrinkWrap: true,
-      itemCount: widget.coffeeTypes.length + 1, // +1 for "None" option
-      separatorBuilder: (context, index) => const Divider(height: 1),
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          return RadioListTile<String?>(
-            title: const Text('None'),
-            value: null,
-            groupValue: _selectedKey,
-            onChanged: (value) {
-              setState(() {
-                _selectedKey = value;
-              });
-              widget.onSelectionChanged(value);
-            },
-          );
-        }
+    final List<Widget> radioListTiles = [];
 
-        final coffeeType = widget.coffeeTypes[index - 1];
+    // Add 'None' option
+    radioListTiles.add(
+      RadioListTile<String?>(value: null, title: const Text('None')),
+    );
+
+    // Add coffee types options
+    radioListTiles.addAll(
+      widget.coffeeTypes.map((coffeeType) {
         return RadioListTile<String?>(
-          title: Text(coffeeType.value),
           value: coffeeType.key.toString(),
-          groupValue: _selectedKey,
-          onChanged: (value) {
-            setState(() {
-              _selectedKey = value;
-            });
-            widget.onSelectionChanged(value);
-          },
+          title: Text(coffeeType.value),
         );
+      }),
+    );
+
+    return RadioGroup<String?>(
+      groupValue: _selectedKey,
+      onChanged: (String? value) {
+        setState(() {
+          _selectedKey = value;
+        });
+        widget.onSelectionChanged(value);
       },
+      child: SingleChildScrollView(child: Column(children: radioListTiles)),
     );
   }
 }
