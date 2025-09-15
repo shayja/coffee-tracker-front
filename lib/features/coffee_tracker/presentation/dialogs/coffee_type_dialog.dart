@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 Future<String?> showCoffeeTypeSelectionDialog({
   required BuildContext context,
   required List<CoffeeType> coffeeTypes,
-  String? initialSelectedKey,
+  int? initialSelectedKey,
 }) async {
-  String? selectedKey = initialSelectedKey;
+  int? selectedKey = initialSelectedKey;
 
   return showDialog<String>(
     context: context,
@@ -20,7 +20,7 @@ Future<String?> showCoffeeTypeSelectionDialog({
           coffeeTypes: coffeeTypes,
           selectedKey: selectedKey,
           onSelectionChanged: (newKey) {
-            selectedKey = newKey;
+            selectedKey = newKey != null ? newKey as int : null;
           },
         ),
       ),

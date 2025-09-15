@@ -5,7 +5,7 @@ class AppConfig {
   // Compile-time constants
   static const String baseUrl = String.fromEnvironment(
     'BASE_URL',
-    defaultValue: 'http://10.0.0.10:3000/api/v1', // Dev fallback
+    defaultValue: 'http://10.0.0.3:3000/api/v1', // Dev fallback
     //defaultValue: 'http://localhost:3000/api/v1', // Dev fallback
   );
 
