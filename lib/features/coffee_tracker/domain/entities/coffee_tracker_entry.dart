@@ -14,28 +14,24 @@ class CoffeeTrackerEntry {
     this.latitude,
     this.longitude,
     this.coffeeType,
-  }) {
-    if (id.isEmpty) {
-      throw ArgumentError('ID cannot be empty');
-    }
-    _validateCoordinates(latitude, longitude);
+  }) : assert(id.isNotEmpty, 'ID cannot be empty') {
+    CoffeeTrackerEntry.validateCoordinates(latitude, longitude);
   }
 
-  void _validateCoordinates(double? lat, double? lon) {
+  static void validateCoordinates(double? lat, double? lon) {
     if (lat != null && (lat < -90 || lat > 90)) {
       throw ArgumentError('Latitude must be between -90 and 90');
     }
     if (lon != null && (lon < -180 || lon > 180)) {
       throw ArgumentError('Longitude must be between -180 and 180');
     }
-    if ((lat != null && lon == null) || (lat == null && lon != null)) {
+    if ((lat != null) != (lon != null)) {
       throw ArgumentError(
         'Both latitude and longitude must be provided together, or both null',
       );
     }
   }
 
-  // For creating new entries
   factory CoffeeTrackerEntry.create({
     required DateTime timestamp,
     String? notes,
@@ -72,67 +68,47 @@ class CoffeeTrackerEntry {
   }
 
   factory CoffeeTrackerEntry.fromJson(Map<String, dynamic> json) {
+    final rawId = json['id'] as String?;
+    final rawTimestamp = json['timestamp'] as String?;
+    if (rawId == null || rawTimestamp == null) {
+      throw ArgumentError('Missing required fields in CoffeeTrackerEntry JSON');
+    }
     return CoffeeTrackerEntry(
-      id: json['id'] as String? ?? '',
-      timestamp: DateTime.parse(
-        json['timestamp'] as String? ?? DateTime.now().toIso8601String(),
-      ),
+      id: rawId,
+      timestamp: DateTime.parse(rawTimestamp),
       notes: json['notes'] as String?,
-      latitude: json['latitude'] != null
-          ? (json['latitude'] as num).toDouble()
-          : null,
-      longitude: json['longitude'] != null
-          ? (json['longitude'] as num).toDouble()
-          : null,
-      coffeeType: json['coffeeType'] as int?,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
+      coffeeType: json['coffee_type_id'] as int?,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
+    final data = <String, dynamic>{
       'id': id,
       'timestamp': _formatTimestampForGo(timestamp),
-      'notes': notes,
-      if (latitude != null) 'latitude': latitude,
-      if (longitude != null) 'longitude': longitude,
-      if (coffeeType != null) 'coffeeType': coffeeType,
+      'coffee_type_id': coffeeType,
+      if (notes != null) 'notes': notes,
+      if (latitude != null && longitude != null) ...{
+        'latitude': latitude,
+        'longitude': longitude,
+      },
     };
+
+    return data;
   }
 
-  Map<String, dynamic> toCreateJson() {
-    return {
-      'timestamp': _formatTimestampForGo(timestamp),
-      'notes': notes,
-      if (latitude != null) 'latitude': latitude,
-      if (longitude != null) 'longitude': longitude,
-      if (coffeeType != null) 'coffeeType': coffeeType,
-    };
-  }
-
-  Map<String, dynamic> toUpdateJson() {
-    return toJson(); // Reuse toJson since it includes ID
-  }
-
-  // Helper method to check if location data exists
   bool get hasLocation => latitude != null && longitude != null;
 
-  // Get location as a tuple (if available)
-  ({double latitude, double longitude})? get location {
-    if (hasLocation) {
-      return (latitude: latitude!, longitude: longitude!);
-    }
-    return null;
-  }
+  ({double latitude, double longitude})? get location =>
+      hasLocation ? (latitude: latitude!, longitude: longitude!) : null;
 
-  String _formatTimestampForGo(DateTime timestamp) {
-    return timestamp.toUtc().toIso8601String();
-  }
+  String _formatTimestampForGo(DateTime t) => t.toUtc().toIso8601String();
 
   @override
-  String toString() {
-    return 'CoffeeTrackerEntry{id: $id, timestamp: $timestamp, notes: $notes, '
-        'latitude: $latitude, longitude: $longitude, coffeeType: $coffeeType}';
-  }
+  String toString() =>
+      'CoffeeTrackerEntry{id: $id, timestamp: $timestamp, notes: $notes, '
+      'latitude: $latitude, longitude: $longitude, coffeeType: $coffeeType}';
 
   @override
   bool operator ==(Object other) =>

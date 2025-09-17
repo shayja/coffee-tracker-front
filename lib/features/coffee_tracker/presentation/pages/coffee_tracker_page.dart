@@ -1,12 +1,10 @@
 // coffee_tracker/lib/features/coffee_tracker/presentation/pages/coffee_tracker_page.dart
 
-import 'package:coffee_tracker/core/widgets/add_button.dart';
 import 'package:coffee_tracker/core/widgets/app_scaffold.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_type.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_state.dart';
-import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/coffee_entry_data.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/coffee_log_list.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/show_coffee_entry_dialog.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +21,6 @@ class CoffeeTrackerPage extends StatefulWidget {
 class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
   DateTime selectedDate = DateTime.now();
 
-  // Helper method to check if selected date is today
   bool get _isToday {
     final now = DateTime.now();
     return selectedDate.year == now.year &&
@@ -44,8 +41,6 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
   void _changeDate(int offsetInDays) {
     final newDate = selectedDate.add(Duration(days: offsetInDays));
     final today = DateTime.now();
-
-    // Prevent navigating to future dates
     if (newDate.year > today.year ||
         (newDate.year == today.year && newDate.month > today.month) ||
         (newDate.year == today.year &&
@@ -53,7 +48,6 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
             newDate.day > today.day)) {
       return;
     }
-
     setState(() {
       selectedDate = newDate;
     });
@@ -69,33 +63,7 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
     );
 
     return AppScaffold(
-      appBar: AppBar(
-        title: const Text('☕ Daily Coffee Tracker'),
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: AddButton<CoffeeEntryData>(
-            initialData: CoffeeEntryData(dateTime: selectedDate),
-            showDialogFn: (context, data) =>
-                showCoffeeEntryDialog(context, data, coffeeTypes: coffeeTypes),
-            onAdd: (data) {
-              context.read<CoffeeTrackerBloc>().add(
-                AddCoffeeEntry(
-                  timestamp: data.dateTime,
-                  notes: data.description,
-                  coffeeTypeKey: data.coffeeTypeKey,
-                ),
-              );
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Saved for ${DateFormat("dd/MM/yyyy").format(data.dateTime)}',
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ),
+      appBar: AppBar(title: const Text('☕ Daily Coffee Tracker')),
       body: Column(
         children: [
           const SizedBox(height: 16),
@@ -146,6 +114,25 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          await showCoffeeEntryDialog(
+            context: context,
+            coffeeTypes: coffeeTypes,
+            entry: null,
+            onConfirm: (newDescription, newTimestamp, newCoffeeTypeKey) {
+              context.read<CoffeeTrackerBloc>().add(
+                AddCoffeeEntry(
+                  timestamp: newTimestamp,
+                  notes: newDescription,
+                  coffeeTypeKey: newCoffeeTypeKey,
+                ),
+              );
+            },
+          );
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }

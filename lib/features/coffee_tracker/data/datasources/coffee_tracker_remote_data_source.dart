@@ -85,7 +85,7 @@ class CoffeeTrackerRemoteDataSourceImpl
   @override
   Future<CoffeeTrackerEntry> addEntry(CoffeeTrackerEntry entry) async {
     //debugPrint(entry.timestamp.toIso8601String());
-    final jsonBody = jsonEncode(entry.toCreateJson());
+    final jsonBody = jsonEncode(entry.toJson());
     debugPrint('Request body: $jsonBody');
 
     final response = await client.post(
@@ -111,7 +111,7 @@ class CoffeeTrackerRemoteDataSourceImpl
     CoffeeTrackerEntry oldEntry,
     CoffeeTrackerEntry newEntry,
   ) async {
-    final jsonBody = jsonEncode(newEntry.toUpdateJson());
+    final jsonBody = jsonEncode(newEntry.toJson());
     //debugPrint('Response body: ${jsonBody}');
     final response = await client.put(
       Uri.parse('$baseUrl/entries/${oldEntry.id}'),

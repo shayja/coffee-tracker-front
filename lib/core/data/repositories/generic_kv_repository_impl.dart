@@ -1,5 +1,5 @@
-// lib/features/coffee_tracker/data/repositories/generic_kv_repository_impl.dart
-import 'package:coffee_tracker/features/coffee_tracker/data/datasources/generic_kv_remote_data_source.dart';
+// lib/core/data/repositories/generic_kv_repository_impl.dart
+import 'package:coffee_tracker/core/data/datasources/generic_kv_remote_data_source.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/entities/kv_item.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/repositories/generic_kv_repository.dart';
 import 'package:dartz/dartz.dart';

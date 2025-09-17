@@ -1,21 +1,31 @@
 // lib/features/coffee_tracker/presentation/widgets/show_coffee_entry_dialog.dart
 
 import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_type.dart';
+import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/coffee_entry_data.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'coffee_entry_data.dart';
 
-Future<bool?> showCoffeeEntryDialog(
-  BuildContext context,
-  CoffeeEntryData data, {
+/// A unified dialog for adding or editing a coffee entry.
+///
+/// If [entry] is provided, the dialog is in "edit" mode and pre-populates
+/// with the entry's data. If [entry] is null, the dialog is in "add" mode.
+Future<bool?> showCoffeeEntryDialog({
+  required BuildContext context,
   required List<CoffeeType> coffeeTypes,
+  CoffeeEntryData? entry,
+  required void Function(
+    String newDescription,
+    DateTime newTimestamp,
+    int? coffeeTypeKey,
+  )
+  onConfirm,
 }) {
-  final descriptionController = TextEditingController(text: data.description);
-  DateTime selectedDate = data.dateTime;
-  TimeOfDay selectedTime = TimeOfDay.fromDateTime(data.dateTime);
-
-  // Initialize selected coffee type key (nullable)
-  int? selectedCoffeeTypeKey = data.coffeeTypeKey;
+  final isEditMode = entry != null;
+  final descriptionController = TextEditingController(
+    text: entry?.description ?? '',
+  );
+  DateTime selectedDateTime = entry?.dateTime ?? DateTime.now();
+  int? selectedCoffeeTypeKey = entry?.coffeeTypeKey;
 
   return showDialog<bool>(
     context: context,
@@ -23,7 +33,7 @@ Future<bool?> showCoffeeEntryDialog(
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: const Text('Add Coffee Entry'),
+            title: Text(isEditMode ? 'Edit Coffee Entry' : 'Add Coffee Entry'),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -31,30 +41,28 @@ Future<bool?> showCoffeeEntryDialog(
                   TextField(
                     controller: descriptionController,
                     decoration: const InputDecoration(labelText: 'Description'),
-                    onChanged: (val) => data.description = val,
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton.icon(
                     icon: const Icon(Icons.calendar_today),
                     label: Text(
-                      'Date: ${DateFormat('yyyy-MM-dd').format(selectedDate)}',
+                      'Date: ${DateFormat('yyyy-MM-dd').format(selectedDateTime)}',
                     ),
                     onPressed: () async {
                       final pickedDate = await showDatePicker(
                         context: context,
-                        initialDate: selectedDate,
+                        initialDate: selectedDateTime,
                         firstDate: DateTime(2020),
                         lastDate: DateTime.now(),
                       );
                       if (pickedDate != null) {
                         setState(() {
-                          selectedDate = pickedDate;
-                          data.dateTime = DateTime(
-                            selectedDate.year,
-                            selectedDate.month,
-                            selectedDate.day,
-                            selectedTime.hour,
-                            selectedTime.minute,
+                          selectedDateTime = DateTime(
+                            pickedDate.year,
+                            pickedDate.month,
+                            pickedDate.day,
+                            selectedDateTime.hour,
+                            selectedDateTime.minute,
                           );
                         });
                       }
@@ -63,54 +71,49 @@ Future<bool?> showCoffeeEntryDialog(
                   const SizedBox(height: 8),
                   ElevatedButton.icon(
                     icon: const Icon(Icons.access_time),
-                    label: Text('Time: ${selectedTime.format(context)}'),
+                    label: Text(
+                      'Time: ${TimeOfDay.fromDateTime(selectedDateTime).format(context)}',
+                    ),
                     onPressed: () async {
                       final pickedTime = await showTimePicker(
                         context: context,
-                        initialTime: selectedTime,
+                        initialTime: TimeOfDay.fromDateTime(selectedDateTime),
                       );
                       if (pickedTime != null) {
                         setState(() {
-                          selectedTime = pickedTime;
-                          data.dateTime = DateTime(
-                            selectedDate.year,
-                            selectedDate.month,
-                            selectedDate.day,
-                            selectedTime.hour,
-                            selectedTime.minute,
+                          selectedDateTime = DateTime(
+                            selectedDateTime.year,
+                            selectedDateTime.month,
+                            selectedDateTime.day,
+                            pickedTime.hour,
+                            pickedTime.minute,
                           );
                         });
                       }
                     },
                   ),
                   const SizedBox(height: 16),
-                  // Coffee type dropdown
-                  DropdownButtonFormField<String?>(
-                    // Store dropdown value as String? because dropdown expects String
-                    initialValue: selectedCoffeeTypeKey?.toString(),
+                  DropdownButtonFormField<int?>(
+                    initialValue: selectedCoffeeTypeKey,
                     decoration: const InputDecoration(
                       labelText: 'Coffee Type (optional)',
                       border: OutlineInputBorder(),
                     ),
                     items: [
-                      const DropdownMenuItem<String?>(
+                      const DropdownMenuItem<int?>(
                         value: null,
                         child: Text('None'),
                       ),
                       ...coffeeTypes.map(
-                        (ct) => DropdownMenuItem<String>(
-                          value: ct.key.toString(),
+                        (ct) => DropdownMenuItem<int>(
+                          value: ct.key,
                           child: Text(ct.value),
                         ),
                       ),
                     ],
                     onChanged: (value) {
-                      // Convert selected string to int? or null
                       setState(() {
-                        selectedCoffeeTypeKey = value == null
-                            ? null
-                            : int.tryParse(value);
-                        data.coffeeTypeKey = selectedCoffeeTypeKey;
+                        selectedCoffeeTypeKey = value;
                       });
                     },
                   ),
@@ -124,11 +127,14 @@ Future<bool?> showCoffeeEntryDialog(
               ),
               ElevatedButton(
                 onPressed: () {
-                  data.description = descriptionController.text.trim();
-                  data.coffeeTypeKey = selectedCoffeeTypeKey;
+                  onConfirm(
+                    descriptionController.text.trim(),
+                    selectedDateTime,
+                    selectedCoffeeTypeKey,
+                  );
                   Navigator.of(dialogContext).pop(true);
                 },
-                child: const Text('Add'),
+                child: Text(isEditMode ? 'Save' : 'Add'),
               ),
             ],
           );
