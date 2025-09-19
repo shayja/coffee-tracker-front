@@ -6,6 +6,7 @@ class CoffeeTrackerEntry {
   final double? latitude;
   final double? longitude;
   final int? coffeeType;
+  final int? size;
 
   CoffeeTrackerEntry({
     required this.id,
@@ -14,6 +15,7 @@ class CoffeeTrackerEntry {
     this.latitude,
     this.longitude,
     this.coffeeType,
+    this.size,
   }) : assert(id.isNotEmpty, 'ID cannot be empty') {
     CoffeeTrackerEntry.validateCoordinates(latitude, longitude);
   }
@@ -38,6 +40,7 @@ class CoffeeTrackerEntry {
     double? latitude,
     double? longitude,
     int? coffeeType,
+    int? size,
   }) {
     return CoffeeTrackerEntry(
       id: '', // Will be assigned by server
@@ -46,6 +49,7 @@ class CoffeeTrackerEntry {
       latitude: latitude,
       longitude: longitude,
       coffeeType: coffeeType,
+      size: size,
     );
   }
 
@@ -56,6 +60,7 @@ class CoffeeTrackerEntry {
     double? latitude,
     double? longitude,
     int? coffeeType,
+    int? size,
   }) {
     return CoffeeTrackerEntry(
       id: id ?? this.id,
@@ -64,6 +69,7 @@ class CoffeeTrackerEntry {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       coffeeType: coffeeType ?? this.coffeeType,
+      size: size ?? this.size,
     );
   }
 
@@ -80,6 +86,7 @@ class CoffeeTrackerEntry {
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
       coffeeType: json['coffee_type_id'] as int?,
+      size: json['size_id'] as int?,
     );
   }
 
@@ -87,7 +94,8 @@ class CoffeeTrackerEntry {
     final data = <String, dynamic>{
       'id': id,
       'timestamp': _formatTimestampForGo(timestamp),
-      'coffee_type_id': coffeeType,
+      'type': coffeeType,
+      'size': size,
       if (notes != null) 'notes': notes,
       if (latitude != null && longitude != null) ...{
         'latitude': latitude,
@@ -108,7 +116,7 @@ class CoffeeTrackerEntry {
   @override
   String toString() =>
       'CoffeeTrackerEntry{id: $id, timestamp: $timestamp, notes: $notes, '
-      'latitude: $latitude, longitude: $longitude, coffeeType: $coffeeType}';
+      'latitude: $latitude, longitude: $longitude, coffeeType: $coffeeType, size: $size }';
 
   @override
   bool operator ==(Object other) =>
@@ -120,9 +128,10 @@ class CoffeeTrackerEntry {
           notes == other.notes &&
           latitude == other.latitude &&
           longitude == other.longitude &&
-          coffeeType == other.coffeeType;
+          coffeeType == other.coffeeType &&
+          size == other.size;
 
   @override
   int get hashCode =>
-      Object.hash(id, timestamp, notes, latitude, longitude, coffeeType);
+      Object.hash(id, timestamp, notes, latitude, longitude, coffeeType, size);
 }

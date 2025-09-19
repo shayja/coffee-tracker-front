@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "front",
+      "request": "launch",
+      "type": "dart"
+    },
+    {
+      "name": "front (android Xiaomi Shay)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "8187b646"
+    }
+  ]
+}

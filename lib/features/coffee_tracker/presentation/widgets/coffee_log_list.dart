@@ -1,6 +1,6 @@
 // coffee_tracker/lib/features/coffee_tracker/presentation/widgets/coffee_log_list.dart
 import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_tracker_entry.dart';
-import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_type.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/entities/kv_type.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_state.dart';
@@ -17,9 +17,15 @@ class CoffeeLogList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final coffeeTypes = context.select<CoffeeTypesBloc, List<CoffeeType>>(
-      (bloc) => (bloc.state is CoffeeTypesLoaded)
-          ? (bloc.state as CoffeeTypesLoaded).coffeeTypes
+    final coffeeTypes = context.select<CoffeeTypesBloc, List<KvType>>(
+      (bloc) => (bloc.state is SelectOptionsLoaded)
+          ? (bloc.state as SelectOptionsLoaded).coffeeTypes
+          : [],
+    );
+
+    final sizes = context.select<CoffeeTypesBloc, List<KvType>>(
+      (bloc) => (bloc.state is SelectOptionsLoaded)
+          ? (bloc.state as SelectOptionsLoaded).sizes
           : [],
     );
 
@@ -43,24 +49,28 @@ class CoffeeLogList extends StatelessWidget {
                   await showCoffeeEntryDialog(
                     context: context,
                     coffeeTypes: coffeeTypes,
+                    sizes: sizes,
                     entry: CoffeeEntryData(
                       dateTime: entry.timestamp,
                       description: entry.notes ?? '',
                       coffeeTypeKey: entry.coffeeType,
+                      sizeKey: entry.size,
                     ), // Pass the correct object type
-                    onConfirm: (newDescription, newTimestamp, newCoffeeType) {
-                      final updatedEntry = entry.copyWith(
-                        notes: newDescription,
-                        timestamp: newTimestamp,
-                        coffeeType: newCoffeeType,
-                      );
-                      context.read<CoffeeTrackerBloc>().add(
-                        EditCoffeeEntry(
-                          oldEntry: entry,
-                          newEntry: updatedEntry,
-                        ),
-                      );
-                    },
+                    onConfirm:
+                        (newDescription, newTimestamp, newCoffeeType, newSize) {
+                          final updatedEntry = entry.copyWith(
+                            notes: newDescription,
+                            timestamp: newTimestamp,
+                            coffeeType: newCoffeeType,
+                            size: newSize,
+                          );
+                          context.read<CoffeeTrackerBloc>().add(
+                            EditCoffeeEntry(
+                              oldEntry: entry,
+                              newEntry: updatedEntry,
+                            ),
+                          );
+                        },
                   );
                 },
               ),

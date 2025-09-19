@@ -1,10 +1,10 @@
-import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_type.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/entities/kv_type.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/coffee_type_selection_list.dart';
 import 'package:flutter/material.dart';
 
 Future<String?> showCoffeeTypeSelectionDialog({
   required BuildContext context,
-  required List<CoffeeType> coffeeTypes,
+  required List<KvType> coffeeTypes,
   int? initialSelectedKey,
 }) async {
   return showDialog<String>(

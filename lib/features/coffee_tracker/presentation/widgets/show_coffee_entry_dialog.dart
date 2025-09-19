@@ -1,6 +1,6 @@
 // lib/features/coffee_tracker/presentation/widgets/show_coffee_entry_dialog.dart
 
-import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_type.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/entities/kv_type.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/coffee_entry_data.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -11,12 +11,14 @@ import 'package:intl/intl.dart';
 /// with the entry's data. If [entry] is null, the dialog is in "add" mode.
 Future<bool?> showCoffeeEntryDialog({
   required BuildContext context,
-  required List<CoffeeType> coffeeTypes,
+  required List<KvType> coffeeTypes,
+  required List<KvType> sizes,
   CoffeeEntryData? entry,
   required void Function(
     String newDescription,
     DateTime newTimestamp,
     int? coffeeTypeKey,
+    int? sizeKey,
   )
   onConfirm,
 }) {
@@ -26,6 +28,7 @@ Future<bool?> showCoffeeEntryDialog({
   );
   DateTime selectedDateTime = entry?.dateTime ?? DateTime.now();
   int? selectedCoffeeTypeKey = entry?.coffeeTypeKey;
+  int? selectedSizeKey = entry?.sizeKey;
 
   return showDialog<bool>(
     context: context,
@@ -96,7 +99,7 @@ Future<bool?> showCoffeeEntryDialog({
                   DropdownButtonFormField<int?>(
                     initialValue: selectedCoffeeTypeKey,
                     decoration: const InputDecoration(
-                      labelText: 'Coffee Type (optional)',
+                      labelText: 'Coffee Type',
                       border: OutlineInputBorder(),
                     ),
                     items: [
@@ -117,6 +120,32 @@ Future<bool?> showCoffeeEntryDialog({
                       });
                     },
                   ),
+
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<int?>(
+                    initialValue: selectedSizeKey,
+                    decoration: const InputDecoration(
+                      labelText: 'Size',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      const DropdownMenuItem<int?>(
+                        value: null,
+                        child: Text('None'),
+                      ),
+                      ...sizes.map(
+                        (ct) => DropdownMenuItem<int>(
+                          value: ct.key,
+                          child: Text(ct.value),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        selectedSizeKey = value;
+                      });
+                    },
+                  ),
                 ],
               ),
             ),
@@ -131,6 +160,7 @@ Future<bool?> showCoffeeEntryDialog({
                     descriptionController.text.trim(),
                     selectedDateTime,
                     selectedCoffeeTypeKey,
+                    selectedSizeKey,
                   );
                   Navigator.of(dialogContext).pop(true);
                 },

@@ -1,7 +1,7 @@
 // coffee_tracker/lib/features/coffee_tracker/presentation/pages/coffee_tracker_page.dart
 
 import 'package:coffee_tracker/core/widgets/app_scaffold.dart';
-import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_type.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/entities/kv_type.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_state.dart';
@@ -56,9 +56,14 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final coffeeTypes = context.select<CoffeeTypesBloc, List<CoffeeType>>(
-      (bloc) => (bloc.state is CoffeeTypesLoaded)
-          ? (bloc.state as CoffeeTypesLoaded).coffeeTypes
+    final coffeeTypes = context.select<CoffeeTypesBloc, List<KvType>>(
+      (bloc) => (bloc.state is SelectOptionsLoaded)
+          ? (bloc.state as SelectOptionsLoaded).coffeeTypes
+          : [],
+    );
+    final sizes = context.select<CoffeeTypesBloc, List<KvType>>(
+      (bloc) => (bloc.state is SelectOptionsLoaded)
+          ? (bloc.state as SelectOptionsLoaded).sizes
           : [],
     );
 
@@ -120,16 +125,19 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
           await showCoffeeEntryDialog(
             context: context,
             coffeeTypes: coffeeTypes,
+            sizes: sizes,
             entry: null,
-            onConfirm: (newDescription, newTimestamp, newCoffeeTypeKey) {
-              context.read<CoffeeTrackerBloc>().add(
-                AddCoffeeEntry(
-                  timestamp: newTimestamp,
-                  notes: newDescription,
-                  coffeeTypeKey: newCoffeeTypeKey,
-                ),
-              );
-            },
+            onConfirm:
+                (newDescription, newTimestamp, newCoffeeTypeKey, newSizeKey) {
+                  context.read<CoffeeTrackerBloc>().add(
+                    AddCoffeeEntry(
+                      timestamp: newTimestamp,
+                      notes: newDescription,
+                      coffeeTypeKey: newCoffeeTypeKey,
+                      sizeKey: newSizeKey,
+                    ),
+                  );
+                },
           );
         },
         child: const Icon(Icons.add),

@@ -1,8 +1,8 @@
-import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_type.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/entities/kv_type.dart';
 import 'package:flutter/material.dart';
 
 class CoffeeTypeSelectionList extends StatefulWidget {
-  final List<CoffeeType> coffeeTypes;
+  final List<KvType> coffeeTypes;
   final int? selectedKey;
   final void Function(String? selectedKey) onSelectionChanged;
 

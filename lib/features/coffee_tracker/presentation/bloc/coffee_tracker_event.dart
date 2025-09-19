@@ -13,11 +13,13 @@ class AddCoffeeEntry extends CoffeeTrackerEvent {
   final DateTime timestamp;
   final String notes;
   final int? coffeeTypeKey;
+  final int? sizeKey;
 
   const AddCoffeeEntry({
     required this.timestamp,
     required this.notes,
     this.coffeeTypeKey,
+    this.sizeKey,
   });
 
   @override
@@ -53,4 +55,6 @@ class DeleteCoffeeEntry extends CoffeeTrackerEvent {
 class LoadCoffeeTypes extends Equatable {
   @override
   List<Object?> get props => [];
+
+  String get language => "he";
 }

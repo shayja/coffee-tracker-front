@@ -1,5 +1,5 @@
 import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_tracker_entry.dart';
-import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_type.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/entities/kv_type.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class CoffeeTrackerState extends Equatable {
@@ -33,19 +33,20 @@ class CoffeeTrackerError extends CoffeeTrackerState {
   List<Object?> get props => [message];
 }
 
-abstract class CoffeeTypesState {}
+abstract class SelectOptionsState {}
 
-class CoffeeTypesInitial extends CoffeeTypesState {}
+class SelectOptionsInitial extends SelectOptionsState {}
 
-class CoffeeTypesLoading extends CoffeeTypesState {}
+class SelectOptionsLoading extends SelectOptionsState {}
 
-class CoffeeTypesLoaded extends CoffeeTypesState {
-  final List<CoffeeType> coffeeTypes;
+class SelectOptionsLoaded extends SelectOptionsState {
+  final List<KvType> coffeeTypes;
+  final List<KvType> sizes;
 
-  CoffeeTypesLoaded(this.coffeeTypes);
+  SelectOptionsLoaded(this.coffeeTypes, this.sizes);
 }
 
-class CoffeeTypesError extends CoffeeTypesState {
+class SelectOptionsError extends SelectOptionsState {
   final String message;
-  CoffeeTypesError(this.message);
+  SelectOptionsError(this.message);
 }

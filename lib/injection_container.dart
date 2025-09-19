@@ -24,7 +24,7 @@ import 'package:coffee_tracker/features/coffee_tracker/domain/repositories/gener
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/add_coffee_entry.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/delete_coffee_entry.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/edit_coffee_entry.dart';
-import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/get_coffee_types.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/get_coffee_selections.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/get_daily_coffee_tracker_log.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
 import 'package:coffee_tracker/features/settings/data/datasources/settings_local_data_source.dart';
@@ -142,8 +142,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => Logout(sl()));
   sl.registerLazySingleton(() => BiometricLogin(sl()));
   sl.registerLazySingleton(() => EnableBiometricLogin(sl()));
-  sl.registerLazySingleton<GetCoffeeTypesUseCase>(
-    () => GetCoffeeTypesUseCase(sl<GenericKVRepository>()),
+  sl.registerLazySingleton<GetCoffeeSelectionsUseCase>(
+    () => GetCoffeeSelectionsUseCase(sl<GenericKVRepository>()),
   );
 
   // Bloc (factory because we want new instance per screen)
@@ -170,7 +170,7 @@ Future<void> init() async {
   sl.registerFactory(() => UserBloc(userRepository: sl()));
 
   sl.registerFactory<CoffeeTypesBloc>(
-    () => CoffeeTypesBloc(sl<GetCoffeeTypesUseCase>()),
+    () => CoffeeTypesBloc(sl<GetCoffeeSelectionsUseCase>()),
   );
 
   //! Features - Statistics

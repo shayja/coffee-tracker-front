@@ -3,7 +3,7 @@ import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_tr
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/add_coffee_entry.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/delete_coffee_entry.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/edit_coffee_entry.dart';
-import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/get_coffee_types.dart';
+import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/get_coffee_selections.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/get_daily_coffee_tracker_log.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_state.dart';
@@ -48,6 +48,7 @@ class CoffeeTrackerBloc extends Bloc<CoffeeTrackerEvent, CoffeeTrackerState> {
       latitude: position.latitude,
       longitude: position.longitude,
       coffeeType: event.coffeeTypeKey,
+      size: event.sizeKey,
     );
 
     final result = await addCoffeeEntry(AddCoffeeEntryParams(entry));
@@ -138,16 +139,18 @@ class CoffeeTrackerBloc extends Bloc<CoffeeTrackerEvent, CoffeeTrackerState> {
   }
 }
 
-class CoffeeTypesBloc extends Bloc<LoadCoffeeTypes, CoffeeTypesState> {
-  final GetCoffeeTypesUseCase getCoffeeTypesUseCase;
+class CoffeeTypesBloc extends Bloc<LoadCoffeeTypes, SelectOptionsState> {
+  final GetCoffeeSelectionsUseCase getCoffeeTypesUseCase;
 
-  CoffeeTypesBloc(this.getCoffeeTypesUseCase) : super(CoffeeTypesInitial()) {
+  CoffeeTypesBloc(this.getCoffeeTypesUseCase) : super(SelectOptionsInitial()) {
     on<LoadCoffeeTypes>((event, emit) async {
-      emit(CoffeeTypesLoading());
-      final result = await getCoffeeTypesUseCase.execute();
+      emit(SelectOptionsLoading());
+      final result = await getCoffeeTypesUseCase.execute(event.language);
+
       result.fold(
-        (failure) => emit(CoffeeTypesError(failure.toString())),
-        (coffeeTypes) => emit(CoffeeTypesLoaded(coffeeTypes)),
+        (failure) => emit(SelectOptionsError(failure.toString())),
+        (options) =>
+            emit(SelectOptionsLoaded(options.coffeeTypes, options.sizes)),
       );
     });
   }
