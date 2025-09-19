@@ -5,6 +5,7 @@ import 'package:coffee_tracker/core/auth/auth_service.dart';
 import 'package:coffee_tracker/core/auth/biometric_service.dart';
 import 'package:coffee_tracker/core/config/app_config.dart';
 import 'package:coffee_tracker/core/network/network_info.dart';
+import 'package:coffee_tracker/core/utils/api_utils.dart';
 import 'package:coffee_tracker/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:coffee_tracker/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:coffee_tracker/features/auth/domain/repositories/auth_repository.dart';
@@ -39,14 +40,6 @@ import 'package:coffee_tracker/features/settings/domain/repositories/settings_re
 import 'package:coffee_tracker/features/settings/domain/usecases/get_settings.dart';
 import 'package:coffee_tracker/features/settings/domain/usecases/update_setting.dart';
 import 'package:coffee_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:coffee_tracker/features/tapering_journey/data/datasources/tapering_journey_remote_data_source.dart';
-import 'package:coffee_tracker/features/tapering_journey/data/repositories/tapering_journey_repository_impl.dart';
-import 'package:coffee_tracker/features/tapering_journey/domain/repositories/tapering_journey_repository.dart';
-import 'package:coffee_tracker/features/tapering_journey/domain/usecases/create_tapering_journey.dart';
-import 'package:coffee_tracker/features/tapering_journey/domain/usecases/delete_tapering_journey.dart';
-import 'package:coffee_tracker/features/tapering_journey/domain/usecases/get_tapering_journeys.dart';
-import 'package:coffee_tracker/features/tapering_journey/domain/usecases/update_tapering_journey.dart';
-import 'package:coffee_tracker/features/tapering_journey/presentation/bloc/tapering_journey_bloc.dart';
 import 'package:coffee_tracker/features/user/data/datasources/user_remote_data_source.dart';
 import 'package:coffee_tracker/features/user/data/repositories/user_repository_impl.dart';
 import 'package:coffee_tracker/features/user/domain/repositories/user_repository.dart';
@@ -80,6 +73,8 @@ Future<void> init() async {
     ),
   );
 
+  sl.registerLazySingleton<ApiUtils>(() => ApiUtils(sl<AuthService>()));
+
   // HTTP Client with interceptor
   sl.registerLazySingleton(
     () => InterceptedClient.build(interceptors: [AuthInterceptor(sl())]),
@@ -91,6 +86,7 @@ Future<void> init() async {
       client: sl(),
       baseUrl: AppConfig.baseUrl,
       authService: sl(),
+      apiHelper: sl(),
     ),
   );
 
@@ -99,6 +95,7 @@ Future<void> init() async {
       client: sl(),
       baseUrl: AppConfig.baseUrl,
       authService: sl(),
+      apiHelper: sl(),
     ),
   );
 
@@ -179,6 +176,7 @@ Future<void> init() async {
       client: sl(),
       baseUrl: AppConfig.baseUrl,
       authService: sl(),
+      apiHelper: sl(),
     ),
   );
 
@@ -191,6 +189,7 @@ Future<void> init() async {
       client: sl(),
       baseUrl: AppConfig.baseUrl,
       authService: sl(),
+      apiHelper: sl(),
     ),
   );
 
@@ -204,6 +203,7 @@ Future<void> init() async {
       client: sl(),
       baseUrl: AppConfig.baseUrl,
       authService: sl(),
+      apiHelper: sl(),
     ),
   );
 
@@ -224,36 +224,6 @@ Future<void> init() async {
 
   sl.registerFactory(
     () => SettingsBloc(getSettings: sl(), updateSetting: sl()),
-  );
-
-  //! Features - Tapering Journey
-  sl.registerLazySingleton<TaperingJourneyRemoteDataSource>(
-    () => TaperingJourneyRemoteDataSourceImpl(
-      client: sl(),
-      baseUrl: AppConfig.baseUrl,
-      authService: sl(),
-    ),
-  );
-
-  sl.registerLazySingleton<TaperingJourneyRepository>(
-    () => TaperingJourneyRepositoryImpl(
-      remoteDataSource: sl(),
-      networkInfo: sl(),
-    ),
-  );
-
-  sl.registerLazySingleton(() => CreateTaperingJourneyUseCase(sl()));
-  sl.registerLazySingleton(() => UpdateTaperingJourneyUseCase(sl()));
-  sl.registerLazySingleton(() => DeleteTaperingJourneyUseCase(sl()));
-  sl.registerLazySingleton(() => GetTaperingJourneysUseCase(sl()));
-
-  sl.registerFactory(
-    () => TaperingJourneyBloc(
-      createUseCase: sl(),
-      updateUseCase: sl(),
-      deleteUseCase: sl(),
-      getJourneysUseCase: sl(),
-    ),
   );
 
   //! Register BiometricService

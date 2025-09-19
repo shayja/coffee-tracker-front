@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:coffee_tracker/features/statistics/presentation/pages/statistics_page.dart';
-import 'package:coffee_tracker/features/tapering_journey/presentation/pages/tapering_journey_page.dart';
-import 'package:coffee_tracker/features/tapering_journey/presentation/bloc/tapering_journey_bloc.dart';
 import 'package:coffee_tracker/features/statistics/presentation/bloc/statistics_bloc.dart';
-import 'package:coffee_tracker/injection_container.dart' as di;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -84,22 +81,6 @@ class AppDrawer extends StatelessWidget {
                       Navigator.pop(context);
                       // Navigate to home if not already there
                       Navigator.of(context).popUntil((route) => route.isFirst);
-                    },
-                  ),
-                  _DrawerItem(
-                    icon: Icons.track_changes,
-                    title: 'Tapering Journey',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BlocProvider(
-                            create: (_) => di.sl<TaperingJourneyBloc>(),
-                            child: const TaperingJourneyPage(),
-                          ),
-                        ),
-                      );
                     },
                   ),
                   _DrawerItem(

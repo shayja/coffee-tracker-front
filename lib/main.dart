@@ -1,8 +1,6 @@
 import 'package:coffee_tracker/core/bloc/app_bloc_observer.dart';
 import 'package:coffee_tracker/core/theme/app_theme.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
-import 'package:coffee_tracker/features/tapering_journey/presentation/bloc/tapering_journey_bloc.dart';
-import 'package:coffee_tracker/features/tapering_journey/presentation/pages/tapering_journey_page.dart';
 import 'package:coffee_tracker/features/user/presentation/bloc/user_bloc.dart';
 import 'package:coffee_tracker/features/user/presentation/bloc/user_event.dart';
 import 'package:flutter/material.dart';
@@ -69,10 +67,6 @@ class CoffeeTrackerApp extends StatelessWidget {
             routes: {
               '/login': (_) => const LoginPage(),
               '/coffee-tracker': (_) => const CoffeeTrackerPage(),
-              '/taperingJourney': (context) => BlocProvider(
-                create: (_) => di.sl<TaperingJourneyBloc>(),
-                child: const TaperingJourneyPage(),
-              ),
             },
           );
         },

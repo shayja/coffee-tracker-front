@@ -1,5 +1,6 @@
 // lib/core/data/datasources/generic_kv_remote_data_source.dart
 import 'dart:convert';
+import 'package:coffee_tracker/core/utils/api_utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:coffee_tracker/core/auth/auth_service.dart';
 
@@ -12,12 +13,14 @@ class GenericKVRemoteDataSourceImpl implements GenericKVRemoteDataSource {
   final http.Client client;
   final String baseUrl;
   final AuthService authService;
+  final ApiUtils apiHelper;
   final Duration timeout = const Duration(seconds: 10);
 
   GenericKVRemoteDataSourceImpl({
     required this.client,
     required this.baseUrl,
     required this.authService,
+    required this.apiHelper,
   });
 
   Future<Map<String, String>> _getHeaders() async {

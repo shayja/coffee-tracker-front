@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:coffee_tracker/core/auth/auth_service.dart';
+import 'package:coffee_tracker/core/utils/api_utils.dart';
 import 'package:coffee_tracker/features/user/domain/entities/user.dart';
 import 'package:http/http.dart' as http;
 import 'package:mime/mime.dart';
@@ -19,17 +20,19 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   final http.Client client;
   final String baseUrl;
   final AuthService authService;
+  final ApiUtils apiHelper;
   final Duration timeout = const Duration(seconds: 10);
 
   UserRemoteDataSourceImpl({
     required this.client,
     required this.baseUrl,
     required this.authService,
+    required this.apiHelper,
   });
 
   @override
   Future<User> getProfile() async {
-    final headers = await _getHeaders();
+    final headers = await apiHelper.getHeaders();
     final response = await client.get(
       Uri.parse('$baseUrl/user/profile'),
       headers: headers,
@@ -43,7 +46,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
 
   @override
   Future<void> updateProfile(User user) async {
-    final headers = await _getHeaders();
+    final headers = await apiHelper.getHeaders();
     final response = await client.patch(
       Uri.parse('$baseUrl/user/profile'),
       headers: headers,
@@ -61,7 +64,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
       'POST',
       Uri.parse('$baseUrl/user/avatar'),
     );
-    final headers = await _getHeaders();
+    final headers = await apiHelper.getHeaders();
     request.headers.addAll(headers);
     request.files.add(
       http.MultipartFile(
@@ -86,7 +89,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
 
   @override
   Future<void> deleteAvatar() async {
-    final headers = await _getHeaders();
+    final headers = await apiHelper.getHeaders();
     final response = await client.delete(
       Uri.parse('$baseUrl/user/avatar'),
       headers: headers,
@@ -94,25 +97,5 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
     if (response.statusCode != 200) {
       throw Exception('Failed to delete avatar');
     }
-  }
-
-  Future<Map<String, String>> _getHeaders() async {
-    String? token = await authService.getValidAccessToken();
-
-    // If token is null or expired, try to refresh
-    if (token == null || (await authService.isTokenExpired(token))) {
-      final refreshed = await authService.refreshToken();
-      if (refreshed != null) {
-        token = await authService.getValidAccessToken();
-      } else {
-        throw Exception('Authentication required - please login again');
-      }
-    }
-
-    return {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    };
   }
 }
