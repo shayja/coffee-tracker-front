@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "iPhone 17 Pro",
+      "type": "dart",
+      "request": "launch",
+      "deviceId": "DC4BDD14-78A6-44F9-BE4B-1D1D055930AE"
+    },
+    {
+      "name": "Xiaomi 12T Pro",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "8187b646"
+    }
+  ]
+}
