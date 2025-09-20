@@ -1,6 +1,6 @@
 // coffee_tracker/lib/features/coffee_tracker/presentation/pages/coffee_tracker_page.dart
 
-import 'package:coffee_tracker/core/widgets/app_scaffold.dart';
+import 'package:coffee_tracker/core/widgets/app_drawer.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/entities/kv_type.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
@@ -56,6 +56,7 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final coffeeTypes = context.select<CoffeeTypesBloc, List<KvType>>(
       (bloc) => (bloc.state is SelectOptionsLoaded)
           ? (bloc.state as SelectOptionsLoaded).coffeeTypes
@@ -67,8 +68,19 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
           : [],
     );
 
-    return AppScaffold(
-      appBar: AppBar(title: const Text('☕ Daily Coffee Tracker')),
+    return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
+      drawer: const AppDrawer(),
+      appBar: AppBar(
+        title: const Text("☕ Daily Coffee Tracker"),
+        elevation: 0,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu_rounded),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+      ),
       body: Column(
         children: [
           const SizedBox(height: 16),

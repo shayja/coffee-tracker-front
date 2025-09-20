@@ -1,3 +1,5 @@
+import 'package:coffee_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:coffee_tracker/features/settings/presentation/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:coffee_tracker/features/statistics/presentation/pages/statistics_page.dart';
 import 'package:coffee_tracker/features/statistics/presentation/bloc/statistics_bloc.dart';
@@ -108,6 +110,16 @@ class AppDrawer extends StatelessWidget {
                     title: 'Settings',
                     onTap: () {
                       Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BlocProvider.value(
+                            value: BlocProvider.of<SettingsBloc>(context),
+                            child: const SettingsScreen(),
+                          ),
+                        ),
+                      );
+
                       // Already in settings, do nothing
                     },
                   ),

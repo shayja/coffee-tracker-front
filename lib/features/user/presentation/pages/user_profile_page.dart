@@ -17,7 +17,7 @@ class UserProfilePage extends StatefulWidget {
 class _UserProfilePageState extends State<UserProfilePage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  File? _pickedImage;
+  //File? _pickedImage;
 
   @override
   void initState() {
@@ -72,10 +72,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       context.read<UserBloc>().add(
                         UploadUserAvatar(croppedFile),
                       );
-                      setState(() {
-                        _pickedImage =
-                            croppedFile; // Optional for local preview
-                      });
+                      // setState(() {
+                      //   _pickedImage =
+                      //       croppedFile; // Optional for local preview
+                      // });
                     },
                   ),
                   const SizedBox(height: 16),

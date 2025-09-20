@@ -65,12 +65,17 @@ class AuthService {
       );
 
       if (response.statusCode == 200) {
+        debugPrint('Verify OTP response body: ${response.body}');
         await _saveTokensFromResponse(response.body);
         // Store mobile number for biometric setup
         await _storeMobile(mobile);
 
-        return getValidAccessToken(); // Return the token
+        // Return the token
+        return getValidAccessToken();
       }
+      debugPrint(
+        'Verify OTP failed with status ${response.statusCode}: ${response.body}',
+      );
       return null;
     } catch (e) {
       debugPrint('Error verifying OTP: $e');
@@ -80,12 +85,18 @@ class AuthService {
 
   // Refresh token
   Future<String?> refreshToken() async {
-    final refreshToken = await storage.read(key: _refreshTokenKey);
+    final allValues = await storage.readAll();
+    debugPrint('Current Secure Storage contents:');
+    allValues.forEach((key, value) {
+      debugPrint('Key="$key", Value="$value"');
+    });
 
+    final refreshToken = await storage.read(key: _refreshTokenKey);
     if (refreshToken == null) {
       debugPrint('No refresh token available');
       return null;
     }
+    debugPrint('Refresh token present: $refreshToken');
 
     // Check if refresh token is expired
     if (await isTokenExpired(refreshToken)) {
@@ -137,12 +148,17 @@ class AuthService {
     await storage.delete(key: _accessTokenKey);
     await storage.delete(key: _refreshTokenKey);
     debugPrint('All tokens cleared on logout');
+
+    final allTokens = await storage.readAll();
+    debugPrint('Storage state after logout: $allTokens');
   }
 
   // Get current access token
   Future<String?> getValidAccessToken() async {
     try {
-      return await storage.read(key: _accessTokenKey);
+      final token = await storage.read(key: _accessTokenKey);
+      if (token == null) debugPrint('Access token missing in secure storage');
+      return token;
     } catch (e) {
       debugPrint('Error retrieving token: $e');
       return null;
@@ -156,7 +172,14 @@ class AuthService {
 
       await storage.write(key: _accessTokenKey, value: entity.accessToken);
       await storage.write(key: _refreshTokenKey, value: entity.refreshToken);
-      debugPrint('Tokens saved successfully');
+      debugPrint('Tokens saved successfully: AccessToken and RefreshToken');
+
+      // Verify by reading back
+      final checkAccessToken = await storage.read(key: _accessTokenKey);
+      final checkRefreshToken = await storage.read(key: _refreshTokenKey);
+      debugPrint('Verified stored AccessToken: $checkAccessToken');
+      debugPrint('Verified stored RefreshToken: $checkRefreshToken');
+
       return entity;
     } catch (e) {
       debugPrint('Error saving tokens: $e');
@@ -170,9 +193,14 @@ class AuthService {
     String refreshToken,
   ) async {
     final storage = FlutterSecureStorage();
-    await storage.write(key: 'biometric_mobile', value: mobile);
-    await storage.write(key: 'biometric_access_token', value: accessToken);
-    await storage.write(key: 'biometric_refresh_token', value: refreshToken);
+    try {
+      await storage.write(key: 'biometric_mobile', value: mobile);
+      await storage.write(key: 'biometric_access_token', value: accessToken);
+      await storage.write(key: 'biometric_refresh_token', value: refreshToken);
+      debugPrint('Write succeeded for b x');
+    } catch (e) {
+      debugPrint('Write failed for biometric keys Error: $e');
+    }
   }
 
   // Store mobile number persistently
