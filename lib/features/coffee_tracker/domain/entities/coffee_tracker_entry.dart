@@ -85,8 +85,8 @@ class CoffeeTrackerEntry {
       notes: json['notes'] as String?,
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
-      coffeeType: json['coffee_type_id'] as int?,
-      size: json['size_id'] as int?,
+      coffeeType: json['type'] as int?,
+      size: json['size'] as int?,
     );
   }
 

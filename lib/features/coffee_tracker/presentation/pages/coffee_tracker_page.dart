@@ -40,17 +40,8 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
 
   void _changeDate(int offsetInDays) {
     final newDate = selectedDate.add(Duration(days: offsetInDays));
-    final today = DateTime.now();
-    if (newDate.year > today.year ||
-        (newDate.year == today.year && newDate.month > today.month) ||
-        (newDate.year == today.year &&
-            newDate.month == today.month &&
-            newDate.day > today.day)) {
-      return;
-    }
-    setState(() {
-      selectedDate = newDate;
-    });
+    if (newDate.isAfter(DateTime.now())) return;
+    setState(() => selectedDate = newDate);
     _loadLogForDate(selectedDate);
   }
 
@@ -73,7 +64,6 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
       drawer: const AppDrawer(),
       appBar: AppBar(
         title: const Text("☕ Daily Coffee Tracker"),
-        elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu_rounded),
@@ -83,26 +73,67 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
       ),
       body: Column(
         children: [
-          const SizedBox(height: 16),
-          // Navigation buttons and current date
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.chevron_left),
-                onPressed: () => _changeDate(-1),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text("Add Entry"),
+                onPressed: () async {
+                  final confirmed = await showCoffeeEntryDialog(
+                    context: context,
+                    coffeeTypes: coffeeTypes,
+                    sizes: sizes,
+                    entry: null,
+                    onConfirm: (desc, timestamp, coffeeTypeKey, sizeKey) {
+                      context.read<CoffeeTrackerBloc>().add(
+                        AddCoffeeEntry(
+                          timestamp: timestamp,
+                          notes: desc,
+                          coffeeTypeKey: coffeeTypeKey,
+                          sizeKey: sizeKey,
+                        ),
+                      );
+                    },
+                  );
+                  if (confirmed == true) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Coffee entry added')),
+                    );
+                  }
+                },
               ),
-              Text(
-                DateFormat.yMMMMd().format(selectedDate),
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              IconButton(
-                icon: const Icon(Icons.chevron_right),
-                onPressed: _isToday ? null : () => _changeDate(1),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 16),
+          // Date Navigation and Summary
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left),
+                  onPressed: () => _changeDate(-1),
+                ),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      DateFormat.yMMMMd().format(selectedDate),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right),
+                  onPressed: _isToday ? null : () => _changeDate(1),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Coffee entries list area
           Expanded(
             child: BlocBuilder<CoffeeTrackerBloc, CoffeeTrackerState>(
               builder: (context, state) {
@@ -112,47 +143,45 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
                   final entries = state.entries;
                   return Column(
                     children: [
-                      Text(
-                        'You drank ${entries.length} cups on ${DateFormat.MMMd().format(selectedDate)}',
-                        style: Theme.of(context).textTheme.headlineSmall,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          'You drank ${entries.length} cup${entries.length == 1 ? '' : 's'} on ${DateFormat.MMMd().format(selectedDate)}',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      Expanded(child: CoffeeLogList(entries: entries)),
+                      Expanded(
+                        child: CoffeeLogList(
+                          entries: entries,
+                          coffeeTypes: coffeeTypes,
+                          sizes: sizes,
+                        ),
+                      ),
                     ],
                   );
                 } else if (state is CoffeeTrackerError) {
-                  return Center(child: Text(state.message));
+                  return Center(
+                    child: Text(
+                      state.message,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.error,
+                      ),
+                    ),
+                  );
                 } else {
-                  return const Center(
-                    child: Text('Start tracking your coffee!'),
+                  return Center(
+                    child: Text(
+                      'Start tracking your coffee!',
+                      style: theme.textTheme.bodyLarge,
+                    ),
                   );
                 }
               },
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await showCoffeeEntryDialog(
-            context: context,
-            coffeeTypes: coffeeTypes,
-            sizes: sizes,
-            entry: null,
-            onConfirm:
-                (newDescription, newTimestamp, newCoffeeTypeKey, newSizeKey) {
-                  context.read<CoffeeTrackerBloc>().add(
-                    AddCoffeeEntry(
-                      timestamp: newTimestamp,
-                      notes: newDescription,
-                      coffeeTypeKey: newCoffeeTypeKey,
-                      sizeKey: newSizeKey,
-                    ),
-                  );
-                },
-          );
-        },
-        child: const Icon(Icons.add),
       ),
     );
   }
