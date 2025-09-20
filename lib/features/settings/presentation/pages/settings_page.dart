@@ -1,4 +1,4 @@
-// file: lib/features/settings/presentation/settings_screen.dart
+// file: lib/features/settings/presentation/pages/settings_page.dart
 
 import 'package:coffee_tracker/core/auth/auth_service.dart';
 import 'package:coffee_tracker/core/auth/biometric_service.dart';

@@ -1,4 +1,5 @@
 // file: lib/features/statistics/presentation/pages/statistics_page.dart
+import 'package:coffee_tracker/core/widgets/app_drawer.dart';
 import 'package:coffee_tracker/features/statistics/domain/entities/statistics_entity.dart';
 import 'package:coffee_tracker/features/statistics/presentation/bloc/statistics_bloc.dart';
 import 'package:coffee_tracker/features/statistics/presentation/bloc/statistics_event.dart';
@@ -23,8 +24,20 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('📊 Statistics')),
+      backgroundColor: theme.colorScheme.surface,
+      drawer: const AppDrawer(),
+      appBar: AppBar(
+        title: const Text('📊 Statistics'),
+        elevation: 0,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu_rounded),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+      ),
       body: BlocConsumer<StatisticsBloc, StatisticsState>(
         listener: (context, state) {
           // Handle any side effects if needed

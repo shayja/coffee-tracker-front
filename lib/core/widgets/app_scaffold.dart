@@ -3,7 +3,7 @@ import 'package:coffee_tracker/features/user/presentation/bloc/user_bloc.dart';
 import 'package:coffee_tracker/features/user/presentation/bloc/user_event.dart';
 import 'package:coffee_tracker/injection_container.dart' as di;
 import 'package:flutter/material.dart';
-import 'package:coffee_tracker/features/settings/presentation/settings_screen.dart';
+import 'package:coffee_tracker/features/settings/presentation/pages/settings_page.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AppScaffold extends StatelessWidget {

@@ -1,5 +1,5 @@
 import 'package:coffee_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:coffee_tracker/features/settings/presentation/settings_screen.dart';
+import 'package:coffee_tracker/features/settings/presentation/pages/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:coffee_tracker/features/statistics/presentation/pages/statistics_page.dart';
 import 'package:coffee_tracker/features/statistics/presentation/bloc/statistics_bloc.dart';
