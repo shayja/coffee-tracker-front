@@ -23,7 +23,11 @@ class CoffeeLogList extends StatelessWidget {
 
   String? _getNameForKey(List<KvType> options, int? key) {
     if (key == null) return null;
-    return options.firstWhere((element) => element.key == key).value;
+    final match = options.cast<KvType?>().firstWhere(
+      (element) => element?.key == key,
+      orElse: () => null,
+    );
+    return match?.value;
   }
 
   @override
@@ -51,53 +55,40 @@ class CoffeeLogList extends StatelessWidget {
             title: Text(
               entry.notes?.isNotEmpty == true ? entry.notes! : '',
               style: Theme.of(context).textTheme.titleMedium,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            subtitle: Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Text(timeStr),
-                if (coffeeTypeName != null)
-                  Chip(
-                    label: Text(
-                      coffeeTypeName,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.primary.withOpacity(0.15),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 0,
-                    ),
-                  ),
-                if (sizeName != null)
-                  Chip(
-                    label: Text(
-                      sizeName,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.secondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.secondary.withOpacity(0.15),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 0,
-                    ),
-                  ),
-              ],
-            ),
+            // subtitle: Column(
+            //   crossAxisAlignment: CrossAxisAlignment.start,
+            //   children: [
+            //     Text(timeStr, style: Theme.of(context).textTheme.bodySmall),
+            //     const SizedBox(height: 6),
+            //     SizedBox(
+            //       height: 10, // fixed height to avoid vertical growth
+            //       child: SingleChildScrollView(
+            //         scrollDirection: Axis.horizontal,
+            //         child: Row(
+            //           children: [
+            //             if (coffeeTypeName != null)
+            //               _buildLabelChip(
+            //                 context,
+            //                 coffeeTypeName,
+            //                 Theme.of(context).colorScheme.primary,
+            //               ),
+            //             if (coffeeTypeName != null && sizeName != null)
+            //               const SizedBox(width: 8),
+            //             if (sizeName != null)
+            //               _buildLabelChip(
+            //                 context,
+            //                 sizeName,
+            //                 Theme.of(context).colorScheme.secondary,
+            //               ),
+            //           ],
+            //         ),
+            //       ),
+            //     ),
+            //   ],
+            // ),
             trailing: Wrap(
               spacing: 8,
               children: [
@@ -171,6 +162,22 @@ class CoffeeLogList extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildLabelChip(BuildContext context, String label, Color color) {
+    return Chip(
+      label: Text(
+        label,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      backgroundColor: color.withOpacity(0.15),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
     );
   }
 }

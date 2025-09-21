@@ -30,6 +30,17 @@ Future<bool?> showCoffeeEntryDialog({
   int? selectedCoffeeTypeKey = entry?.coffeeTypeKey;
   int? selectedSizeKey = entry?.sizeKey;
 
+  // For Coffee Type
+  if (selectedCoffeeTypeKey != null &&
+      !coffeeTypes.any((type) => type.key == selectedCoffeeTypeKey)) {
+    selectedCoffeeTypeKey = null;
+  }
+  // For Size
+  if (selectedSizeKey != null &&
+      !sizes.any((size) => size.key == selectedSizeKey)) {
+    selectedSizeKey = null;
+  }
+
   return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,

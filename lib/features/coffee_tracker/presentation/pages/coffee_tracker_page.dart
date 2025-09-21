@@ -51,12 +51,12 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
     final coffeeTypes = context.select<CoffeeTypesBloc, List<KvType>>(
       (bloc) => (bloc.state is SelectOptionsLoaded)
           ? (bloc.state as SelectOptionsLoaded).coffeeTypes
-          : [],
+          : <KvType>[],
     );
     final sizes = context.select<CoffeeTypesBloc, List<KvType>>(
       (bloc) => (bloc.state is SelectOptionsLoaded)
           ? (bloc.state as SelectOptionsLoaded).sizes
-          : [],
+          : <KvType>[],
     );
 
     return Scaffold(
@@ -73,13 +73,14 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
       ),
       body: Column(
         children: [
+          // Add Entry Button Top-Left
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: ElevatedButton.icon(
+              child: FilledButton.icon(
                 icon: const Icon(Icons.add),
-                label: const Text("Add Entry"),
+                label: const Text('Add Entry'),
                 onPressed: () async {
                   final confirmed = await showCoffeeEntryDialog(
                     context: context,
@@ -106,6 +107,7 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
               ),
             ),
           ),
+
           // Date Navigation and Summary
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -133,6 +135,7 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
             ),
           ),
           const SizedBox(height: 8),
+
           // Coffee entries list area
           Expanded(
             child: BlocBuilder<CoffeeTrackerBloc, CoffeeTrackerState>(
