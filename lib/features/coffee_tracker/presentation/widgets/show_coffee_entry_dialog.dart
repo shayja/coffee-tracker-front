@@ -30,189 +30,198 @@ Future<bool?> showCoffeeEntryDialog({
   int? selectedCoffeeTypeKey = entry?.coffeeTypeKey;
   int? selectedSizeKey = entry?.sizeKey;
 
-  // For Coffee Type
-  if (selectedCoffeeTypeKey != null &&
-      !coffeeTypes.any((type) => type.key == selectedCoffeeTypeKey)) {
-    selectedCoffeeTypeKey = null;
-  }
-  // For Size
-  if (selectedSizeKey != null &&
-      !sizes.any((size) => size.key == selectedSizeKey)) {
-    selectedSizeKey = null;
-  }
-
-  return showModalBottomSheet<bool>(
+  return showDialog<bool>(
     context: context,
-    isScrollControlled: true,
+    barrierDismissible: false,
     builder: (sheetContext) {
-      return Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-          left: 16,
-          right: 16,
-          top: 20,
-        ),
-        child: StatefulBuilder(
-          builder: (context, setState) {
-            return SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    isEditMode ? 'Edit Coffee Entry' : 'Add Coffee Entry',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: descriptionController,
-                    decoration: const InputDecoration(
-                      labelText: 'Description',
-                      prefixIcon: Icon(Icons.note),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          icon: const Icon(Icons.calendar_today),
-                          label: Text(
-                            DateFormat('yyyy-MM-dd').format(selectedDateTime),
-                          ),
-                          onPressed: () async {
-                            final date = await showDatePicker(
-                              context: sheetContext,
-                              initialDate: selectedDateTime,
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime.now(),
-                            );
-                            if (date != null) {
-                              setState(() {
-                                selectedDateTime = DateTime(
-                                  date.year,
-                                  date.month,
-                                  date.day,
-                                  selectedDateTime.hour,
-                                  selectedDateTime.minute,
-                                );
-                              });
-                            }
-                          },
-                        ),
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
+            title: Text(isEditMode ? 'Edit Coffee Entry' : 'Add Coffee Entry'),
+            content: SingleChildScrollView(
+              child: SizedBox(
+                width: 360, // fixed width to avoid intrinsic dimension issues
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: descriptionController,
+                      decoration: const InputDecoration(
+                        labelText: 'Description',
+                        prefixIcon: Icon(Icons.note),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          icon: const Icon(Icons.access_time),
-                          label: Text(
-                            TimeOfDay.fromDateTime(
-                              selectedDateTime,
-                            ).format(context),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.calendar_today, size: 18),
+                            label: Text(
+                              DateFormat('dd/MM').format(selectedDateTime),
+                            ),
+                            onPressed: () async {
+                              final date = await showDatePicker(
+                                context: context,
+                                initialDate: selectedDateTime,
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime.now(),
+                              );
+                              if (date != null) {
+                                setState(() {
+                                  selectedDateTime = DateTime(
+                                    date.year,
+                                    date.month,
+                                    date.day,
+                                    selectedDateTime.hour,
+                                    selectedDateTime.minute,
+                                  );
+                                });
+                              }
+                            },
                           ),
-                          onPressed: () async {
-                            final time = await showTimePicker(
-                              context: sheetContext,
-                              initialTime: TimeOfDay.fromDateTime(
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.access_time, size: 18),
+                            label: Text(
+                              TimeOfDay.fromDateTime(
                                 selectedDateTime,
+                              ).format(context),
+                            ),
+                            onPressed: () async {
+                              final time = await showTimePicker(
+                                context: context,
+                                initialTime: TimeOfDay.fromDateTime(
+                                  selectedDateTime,
+                                ),
+                              );
+                              if (time != null) {
+                                setState(() {
+                                  selectedDateTime = DateTime(
+                                    selectedDateTime.year,
+                                    selectedDateTime.month,
+                                    selectedDateTime.day,
+                                    time.hour,
+                                    time.minute,
+                                  );
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: DropdownButtonFormField<int?>(
+                            isDense: true,
+                            isExpanded: true,
+                            initialValue: selectedCoffeeTypeKey,
+                            decoration: const InputDecoration(
+                              labelText: 'Type',
+                              prefixIcon: Icon(Icons.local_cafe, size: 18),
+                              border: OutlineInputBorder(),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 8,
                               ),
-                            );
-                            if (time != null) {
+                            ),
+                            items: [
+                              const DropdownMenuItem<int?>(
+                                value: null,
+                                child: Text('None'),
+                              ),
+                              ...coffeeTypes.map(
+                                (type) => DropdownMenuItem<int>(
+                                  value: type.key,
+                                  child: Text(
+                                    type.value,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            onChanged: (int? value) {
                               setState(() {
-                                selectedDateTime = DateTime(
-                                  selectedDateTime.year,
-                                  selectedDateTime.month,
-                                  selectedDateTime.day,
-                                  time.hour,
-                                  time.minute,
-                                );
+                                selectedCoffeeTypeKey = value;
                               });
-                            }
-                          },
+                            },
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<int?>(
-                    initialValue: selectedCoffeeTypeKey,
-                    decoration: const InputDecoration(
-                      labelText: 'Coffee Type',
-                      prefixIcon: Icon(Icons.local_cafe),
-                      border: OutlineInputBorder(),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: DropdownButtonFormField<int?>(
+                            isDense: true,
+                            isExpanded: true,
+                            initialValue: selectedSizeKey,
+                            decoration: const InputDecoration(
+                              labelText: 'Size',
+                              prefixIcon: Icon(Icons.format_size, size: 18),
+                              border: OutlineInputBorder(),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 8,
+                              ),
+                            ),
+                            items: [
+                              const DropdownMenuItem<int?>(
+                                value: null,
+                                child: Text('None'),
+                              ),
+                              ...sizes.map(
+                                (size) => DropdownMenuItem<int>(
+                                  value: size.key,
+                                  child: Text(
+                                    size.value,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            onChanged: (int? value) {
+                              setState(() {
+                                selectedSizeKey = value;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
                     ),
-                    items: [
-                      const DropdownMenuItem<int?>(
-                        value: null,
-                        child: Text('None'),
-                      ),
-                      ...coffeeTypes.map(
-                        (type) => DropdownMenuItem<int>(
-                          value: type.key,
-                          child: Text(type.value),
-                        ),
-                      ),
-                    ],
-                    onChanged: (int? value) {
-                      setState(() {
-                        selectedCoffeeTypeKey = value;
-                      });
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<int?>(
-                    initialValue: selectedSizeKey,
-                    decoration: const InputDecoration(
-                      labelText: 'Size',
-                      prefixIcon: Icon(Icons.format_size),
-                      border: OutlineInputBorder(),
-                    ),
-                    items: [
-                      const DropdownMenuItem<int?>(
-                        value: null,
-                        child: Text('None'),
-                      ),
-                      ...sizes.map(
-                        (size) => DropdownMenuItem<int>(
-                          value: size.key,
-                          child: Text(size.value),
-                        ),
-                      ),
-                    ],
-                    onChanged: (int? value) {
-                      setState(() {
-                        selectedSizeKey = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.of(sheetContext).pop(false),
-                        child: const Text('Cancel'),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton(
-                        onPressed: () {
-                          onConfirm(
-                            descriptionController.text.trim(),
-                            selectedDateTime,
-                            selectedCoffeeTypeKey,
-                            selectedSizeKey,
-                          );
-                          Navigator.of(sheetContext).pop(true);
-                        },
-                        child: Text(isEditMode ? 'Save' : 'Add'),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
-            );
-          },
-        ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton(
+                onPressed: () {
+                  onConfirm(
+                    descriptionController.text.trim(),
+                    selectedDateTime,
+                    selectedCoffeeTypeKey,
+                    selectedSizeKey,
+                  );
+                  Navigator.of(context).pop(true);
+                },
+                child: Text(isEditMode ? 'Save' : 'Add'),
+              ),
+            ],
+          );
+        },
       );
     },
   );
