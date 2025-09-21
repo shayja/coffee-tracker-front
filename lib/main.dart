@@ -19,7 +19,8 @@ import 'features/statistics/presentation/bloc/statistics_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await di.init();
+  await di.initCore();
+  await di.initFeatures();
   Bloc.observer = AppBlocObserver();
   runApp(const CoffeeTrackerApp());
 }

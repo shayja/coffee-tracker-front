@@ -53,18 +53,17 @@ import 'package:http_interceptor/http_interceptor.dart';
 
 final sl = GetIt.instance;
 
-Future<void> init() async {
-  //! External dependencies first (lowest level)
+Future<void> initCore() async {
+  // External dependencies first (lowest level)
   final sharedPreferences = await SharedPreferences.getInstance();
-  sl.registerLazySingleton(() => sharedPreferences);
+  sl.registerSingleton<SharedPreferences>(sharedPreferences);
   sl.registerLazySingleton(() => Connectivity());
   sl.registerLazySingleton(() => const FlutterSecureStorage());
-  sl.registerLazySingleton(() => http.Client());
+  sl.registerLazySingleton<http.Client>(() => http.Client());
 
-  //! Core services
+  // Core services
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
 
-  // Register AuthService
   sl.registerLazySingleton<AuthService>(
     () => AuthService(
       client: sl<http.Client>(),
@@ -75,15 +74,20 @@ Future<void> init() async {
 
   sl.registerLazySingleton<ApiUtils>(() => ApiUtils(sl<AuthService>()));
 
-  // HTTP Client with interceptor
-  sl.registerLazySingleton(
-    () => InterceptedClient.build(interceptors: [AuthInterceptor(sl())]),
+  sl.registerLazySingleton<InterceptedClient>(
+    () => InterceptedClient.build(
+      interceptors: [AuthInterceptor(sl<AuthService>())],
+    ),
   );
 
-  //! Features - Coffee Tracker
+  sl.registerLazySingleton(() => BiometricService());
+}
+
+Future<void> initFeatures() async {
+  // Features - Coffee Tracker
   sl.registerLazySingleton<CoffeeTrackerRemoteDataSource>(
     () => CoffeeTrackerRemoteDataSourceImpl(
-      client: sl(),
+      client: sl<InterceptedClient>(),
       baseUrl: AppConfig.baseUrl,
       authService: sl(),
       apiHelper: sl(),
@@ -92,7 +96,7 @@ Future<void> init() async {
 
   sl.registerLazySingleton<GenericKVRemoteDataSource>(
     () => GenericKVRemoteDataSourceImpl(
-      client: sl(),
+      client: sl<InterceptedClient>(),
       baseUrl: AppConfig.baseUrl,
       authService: sl(),
       apiHelper: sl(),
@@ -103,7 +107,6 @@ Future<void> init() async {
     () => AuthRemoteDataSourceImpl(authService: sl()),
   );
 
-  // Repository
   sl.registerLazySingleton<CoffeeTrackerRepository>(
     () => CoffeeRepositoryImpl(
       remoteDataSource: sl(),
@@ -120,9 +123,11 @@ Future<void> init() async {
       biometricService: sl(),
     ),
   );
+
   sl.registerLazySingleton<UserRepository>(
     () => UserRepositoryImpl(remoteDataSource: sl()),
   );
+
   sl.registerLazySingleton<GenericKVRepository>(
     () => GenericKVRepositoryImpl(remoteDataSource: sl()),
   );
@@ -143,7 +148,7 @@ Future<void> init() async {
     () => GetCoffeeSelectionsUseCase(sl<GenericKVRepository>()),
   );
 
-  // Bloc (factory because we want new instance per screen)
+  // Blocs
   sl.registerFactory(
     () => CoffeeTrackerBloc(
       addCoffeeEntry: sl(),
@@ -164,16 +169,17 @@ Future<void> init() async {
       authService: sl(),
     ),
   );
+
   sl.registerFactory(() => UserBloc(userRepository: sl()));
 
   sl.registerFactory<CoffeeTypesBloc>(
     () => CoffeeTypesBloc(sl<GetCoffeeSelectionsUseCase>()),
   );
 
-  //! Features - Statistics
+  // Features - Statistics
   sl.registerLazySingleton<StatisticsRemoteDataSource>(
     () => StatisticsRemoteDataSourceImpl(
-      client: sl(),
+      client: sl<InterceptedClient>(),
       baseUrl: AppConfig.baseUrl,
       authService: sl(),
       apiHelper: sl(),
@@ -186,7 +192,7 @@ Future<void> init() async {
 
   sl.registerLazySingleton<UserRemoteDataSource>(
     () => UserRemoteDataSourceImpl(
-      client: sl(),
+      client: sl<InterceptedClient>(),
       baseUrl: AppConfig.baseUrl,
       authService: sl(),
       apiHelper: sl(),
@@ -197,10 +203,10 @@ Future<void> init() async {
 
   sl.registerFactory(() => StatisticsBloc(getStatistics: sl()));
 
-  //! Features - Settings
+  // Features - Settings
   sl.registerLazySingleton<SettingsRemoteDataSource>(
     () => SettingsRemoteDataSourceImpl(
-      client: sl(),
+      client: sl<InterceptedClient>(),
       baseUrl: AppConfig.baseUrl,
       authService: sl(),
       apiHelper: sl(),
@@ -225,7 +231,4 @@ Future<void> init() async {
   sl.registerFactory(
     () => SettingsBloc(getSettings: sl(), updateSetting: sl()),
   );
-
-  //! Register BiometricService
-  sl.registerLazySingleton(() => BiometricService());
 }

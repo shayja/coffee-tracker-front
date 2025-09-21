@@ -48,9 +48,23 @@ class CoffeeLogList extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           child: ListTile(
-            leading: Icon(
-              Icons.local_cafe,
-              color: Theme.of(context).colorScheme.primary,
+            leading: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  timeStr,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.65),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Icon(
+                  Icons.local_cafe,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ],
             ),
             title: Text(
               entry.notes?.isNotEmpty == true ? entry.notes! : '',
@@ -58,37 +72,34 @@ class CoffeeLogList extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            // subtitle: Column(
-            //   crossAxisAlignment: CrossAxisAlignment.start,
-            //   children: [
-            //     Text(timeStr, style: Theme.of(context).textTheme.bodySmall),
-            //     const SizedBox(height: 6),
-            //     SizedBox(
-            //       height: 10, // fixed height to avoid vertical growth
-            //       child: SingleChildScrollView(
-            //         scrollDirection: Axis.horizontal,
-            //         child: Row(
-            //           children: [
-            //             if (coffeeTypeName != null)
-            //               _buildLabelChip(
-            //                 context,
-            //                 coffeeTypeName,
-            //                 Theme.of(context).colorScheme.primary,
-            //               ),
-            //             if (coffeeTypeName != null && sizeName != null)
-            //               const SizedBox(width: 8),
-            //             if (sizeName != null)
-            //               _buildLabelChip(
-            //                 context,
-            //                 sizeName,
-            //                 Theme.of(context).colorScheme.secondary,
-            //               ),
-            //           ],
-            //         ),
-            //       ),
-            //     ),
-            //   ],
-            // ),
+            subtitle: Row(
+              children: [
+                if (coffeeTypeName != null)
+                  Text(
+                    coffeeTypeName,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.65),
+                      fontWeight: FontWeight.w500,
+                      fontSize: 12,
+                    ),
+                  ),
+                if (coffeeTypeName != null && sizeName != null)
+                  const SizedBox(width: 8),
+                if (sizeName != null)
+                  Text(
+                    sizeName,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.secondary.withValues(alpha: 0.65),
+                      fontWeight: FontWeight.w500,
+                      fontSize: 12,
+                    ),
+                  ),
+              ],
+            ),
             trailing: Wrap(
               spacing: 8,
               children: [
@@ -162,22 +173,6 @@ class CoffeeLogList extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildLabelChip(BuildContext context, String label, Color color) {
-    return Chip(
-      label: Text(
-        label,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      backgroundColor: color.withOpacity(0.15),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      visualDensity: VisualDensity.compact,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
     );
   }
 }
