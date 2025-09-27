@@ -1,5 +1,7 @@
 // lib/core/auth/auth_service.dart
 import 'dart:convert';
+import 'package:coffee_tracker/core/auth/auth_interceptor.dart';
+import 'package:coffee_tracker/core/utils/device_utils.dart';
 import 'package:coffee_tracker/features/auth/data/models/auth_response_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -58,10 +60,12 @@ class AuthService {
   // Verify OTP and save tokens
   Future<String?> verifyOtp(String mobile, String otp) async {
     try {
+      final deviceId = await getOrCreateDeviceId();
+      debugPrint('Verifying OTP for mobile: $mobile with device ID: $deviceId');
       final response = await client.post(
         Uri.parse('$baseUrl/auth/verify-otp'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'mobile': mobile, 'otp': otp}),
+        body: jsonEncode({'mobile': mobile, 'otp': otp, 'device_id': deviceId}),
       );
 
       if (response.statusCode == 200) {
@@ -106,10 +110,16 @@ class AuthService {
     }
 
     try {
+      final deviceId = await getOrCreateDeviceId();
+      debugPrint('Using device ID: $deviceId for token refresh');
+
       final response = await client.post(
         Uri.parse('$baseUrl/auth/refresh'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'refresh_token': refreshToken}),
+        body: jsonEncode({
+          'refresh_token': refreshToken,
+          'device_id': deviceId,
+        }),
       );
 
       debugPrint('Refresh response: ${response.statusCode}');
@@ -145,12 +155,34 @@ class AuthService {
 
   // Enhanced logout to clear all tokens
   Future<void> logout() async {
+    await logoutApi();
+
     await storage.delete(key: _accessTokenKey);
     await storage.delete(key: _refreshTokenKey);
     debugPrint('All tokens cleared on logout');
 
     final allTokens = await storage.readAll();
     debugPrint('Storage state after logout: $allTokens');
+
+    navigatorKey.currentState?.pushNamedAndRemoveUntil(
+      '/login',
+      (route) => false,
+    );
+  }
+
+  Future<void> logoutApi() async {
+    try {
+      final deviceId = await getOrCreateDeviceId();
+      debugPrint('Logging out with device ID: $deviceId');
+      final response = await client.post(
+        Uri.parse('$baseUrl/auth/'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'device_id': deviceId}),
+      );
+      debugPrint('Logging out response: ${response.statusCode}');
+    } catch (e) {
+      debugPrint('Logout request error: $e');
+    }
   }
 
   // Get current access token
