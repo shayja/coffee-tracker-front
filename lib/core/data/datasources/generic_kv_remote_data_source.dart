@@ -27,7 +27,7 @@ class GenericKVRemoteDataSourceImpl implements GenericKVRemoteDataSource {
     String? token = await authService.getValidAccessToken();
 
     if (token == null || (await authService.isTokenExpired(token))) {
-      final refreshed = await authService.refreshToken();
+      final refreshed = await authService.refreshAccessToken();
       if (refreshed != null) {
         token = await authService.getValidAccessToken();
       } else {

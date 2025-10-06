@@ -87,8 +87,8 @@ class AuthService {
     }
   }
 
-  // Refresh token
-  Future<String?> refreshToken() async {
+  // Refresh access token
+  Future<String?> refreshAccessToken() async {
     final allValues = await storage.readAll();
     debugPrint('Current Secure Storage contents:');
     allValues.forEach((key, value) {
@@ -127,7 +127,7 @@ class AuthService {
       if (response.statusCode == 200) {
         final res = await _saveTokensFromResponse(response.body);
         debugPrint('Token refresh successful');
-        return res.refreshToken;
+        return res.accessToken;
       } else if (response.statusCode == 401) {
         // Refresh token is invalid/expired
         debugPrint('Refresh token $refreshToken invalid - logging out');
@@ -175,7 +175,7 @@ class AuthService {
       final deviceId = await getOrCreateDeviceId();
       debugPrint('Logging out with device ID: $deviceId');
       final response = await client.post(
-        Uri.parse('$baseUrl/auth/'),
+        Uri.parse('$baseUrl/auth/logout'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'device_id': deviceId}),
       );

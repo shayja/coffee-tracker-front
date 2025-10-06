@@ -172,7 +172,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           final isExpired = await authService.isTokenExpired(token.accessToken);
           if (isExpired) {
             debugPrint('Access token expired, attempting refresh...');
-            final refreshedToken = await authService.refreshToken();
+            final refreshedToken = await authService.refreshAccessToken();
             if (refreshedToken != null) {
               debugPrint('Token refreshed successfully');
               // Get the updated access token

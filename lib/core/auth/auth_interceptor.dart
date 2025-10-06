@@ -45,7 +45,7 @@ class AuthInterceptor implements InterceptorContract {
       if (!_isRefreshing) {
         _isRefreshing = true;
         try {
-          final newToken = await _authService.refreshToken();
+          final newToken = await _authService.refreshAccessToken();
           if (newToken != null) {
             // Retry all pending requests with new token
             for (final pending in _pendingRequests) {
