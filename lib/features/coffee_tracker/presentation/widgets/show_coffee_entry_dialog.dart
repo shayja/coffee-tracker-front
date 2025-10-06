@@ -14,6 +14,7 @@ Future<bool?> showCoffeeEntryDialog({
   required List<KvType> coffeeTypes,
   required List<KvType> sizes,
   CoffeeEntryData? entry,
+  DateTime? initialDateTime,
   required void Function(
     String newDescription,
     DateTime newTimestamp,
@@ -26,7 +27,7 @@ Future<bool?> showCoffeeEntryDialog({
   final descriptionController = TextEditingController(
     text: entry?.description ?? '',
   );
-  DateTime selectedDateTime = entry?.dateTime ?? DateTime.now();
+  DateTime selectedDateTime = initialDateTime ?? entry?.dateTime ?? DateTime.now();
   int? selectedCoffeeTypeKey = entry?.coffeeTypeKey;
   int? selectedSizeKey = entry?.sizeKey;
 

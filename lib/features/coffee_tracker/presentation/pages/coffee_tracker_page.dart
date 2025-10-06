@@ -84,13 +84,23 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
                 icon: const Icon(Icons.add),
                 label: const Text('Add Entry'),
                 onPressed: () async {
+                  final now = DateTime.now();
+                  final defaultDateTime = DateTime(
+                    selectedDate.year,
+                    selectedDate.month,
+                    selectedDate.day,
+                    now.hour,
+                    now.minute,
+                  );
+                  final bloc = context.read<CoffeeTrackerBloc>();
                   final confirmed = await showCoffeeEntryDialog(
                     context: context,
                     coffeeTypes: coffeeTypes,
                     sizes: sizes,
                     entry: null,
+                    initialDateTime: defaultDateTime,
                     onConfirm: (desc, timestamp, coffeeTypeKey, sizeKey) {
-                      context.read<CoffeeTrackerBloc>().add(
+                      bloc.add(
                         AddCoffeeEntry(
                           timestamp: timestamp,
                           notes: desc,
@@ -100,8 +110,8 @@ class _CoffeeTrackerPageState extends State<CoffeeTrackerPage> {
                       );
                     },
                   );
-                  if (!mounted) return;
-                  if (confirmed == true) {
+                  if (confirmed == true && mounted) {
+                    // ignore: use_build_context_synchronously
                     SnackBarUtils.showSuccess(context, 'Coffee entry added');
                   }
                 },
