@@ -11,6 +11,7 @@ import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
+import 'features/coffee_tracker/presentation/bloc/coffee_types_bloc.dart';
 import 'features/coffee_tracker/presentation/pages/coffee_tracker_page.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
 import 'features/settings/presentation/bloc/settings_event.dart';

@@ -3,7 +3,6 @@ import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_tr
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/add_coffee_entry.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/delete_coffee_entry.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/edit_coffee_entry.dart';
-import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/get_coffee_selections.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/get_daily_coffee_tracker_log.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_state.dart';
@@ -136,22 +135,5 @@ class CoffeeTrackerBloc extends Bloc<CoffeeTrackerEvent, CoffeeTrackerState> {
       (failure) => emit(CoffeeTrackerError(onErrorMessage)),
       (entries) => emit(CoffeeTrackerLoaded(entries)),
     );
-  }
-}
-
-class CoffeeTypesBloc extends Bloc<LoadCoffeeTypes, SelectOptionsState> {
-  final GetCoffeeSelectionsUseCase getCoffeeTypesUseCase;
-
-  CoffeeTypesBloc(this.getCoffeeTypesUseCase) : super(SelectOptionsInitial()) {
-    on<LoadCoffeeTypes>((event, emit) async {
-      emit(SelectOptionsLoading());
-      final result = await getCoffeeTypesUseCase.execute(event.language);
-
-      result.fold(
-        (failure) => emit(SelectOptionsError(failure.toString())),
-        (options) =>
-            emit(SelectOptionsLoaded(options.coffeeTypes, options.sizes)),
-      );
-    });
   }
 }

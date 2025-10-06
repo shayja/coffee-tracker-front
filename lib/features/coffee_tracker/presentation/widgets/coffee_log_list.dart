@@ -1,4 +1,5 @@
 // coffee_tracker/lib/features/coffee_tracker/presentation/widgets/coffee_log_list.dart
+import 'package:coffee_tracker/core/utils/snackbar_utils.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/entities/coffee_tracker_entry.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/entities/kv_type.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
@@ -162,9 +163,7 @@ class CoffeeLogList extends StatelessWidget {
                       context.read<CoffeeTrackerBloc>().add(
                         DeleteCoffeeEntry(entry: entry),
                       );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Coffee entry deleted')),
-                      );
+                      SnackBarUtils.showSuccess(context, 'Coffee entry deleted');
                     }
                   },
                 ),

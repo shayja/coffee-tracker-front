@@ -2,8 +2,8 @@
 
 import 'package:coffee_tracker/features/coffee_tracker/domain/entities/kv_type.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/coffee_entry_data.dart';
+import 'package:coffee_tracker/features/coffee_tracker/presentation/widgets/date_time_picker_row.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 /// A unified dialog for adding or editing a coffee entry.
 ///
@@ -56,66 +56,13 @@ Future<bool?> showCoffeeEntryDialog({
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            icon: const Icon(Icons.calendar_today, size: 18),
-                            label: Text(
-                              DateFormat('dd/MM').format(selectedDateTime),
-                            ),
-                            onPressed: () async {
-                              final date = await showDatePicker(
-                                context: context,
-                                initialDate: selectedDateTime,
-                                firstDate: DateTime(2020),
-                                lastDate: DateTime.now(),
-                              );
-                              if (date != null) {
-                                setState(() {
-                                  selectedDateTime = DateTime(
-                                    date.year,
-                                    date.month,
-                                    date.day,
-                                    selectedDateTime.hour,
-                                    selectedDateTime.minute,
-                                  );
-                                });
-                              }
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            icon: const Icon(Icons.access_time, size: 18),
-                            label: Text(
-                              TimeOfDay.fromDateTime(
-                                selectedDateTime,
-                              ).format(context),
-                            ),
-                            onPressed: () async {
-                              final time = await showTimePicker(
-                                context: context,
-                                initialTime: TimeOfDay.fromDateTime(
-                                  selectedDateTime,
-                                ),
-                              );
-                              if (time != null) {
-                                setState(() {
-                                  selectedDateTime = DateTime(
-                                    selectedDateTime.year,
-                                    selectedDateTime.month,
-                                    selectedDateTime.day,
-                                    time.hour,
-                                    time.minute,
-                                  );
-                                });
-                              }
-                            },
-                          ),
-                        ),
-                      ],
+                    DateTimePickerRow(
+                      initialDateTime: selectedDateTime,
+                      onDateTimeChanged: (newDateTime) {
+                        setState(() {
+                          selectedDateTime = newDateTime;
+                        });
+                      },
                     ),
                     const SizedBox(height: 16),
                     Row(

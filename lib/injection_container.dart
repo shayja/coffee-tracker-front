@@ -28,6 +28,7 @@ import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/edit_coff
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/get_coffee_selections.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/get_daily_coffee_tracker_log.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
+import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_types_bloc.dart';
 import 'package:coffee_tracker/features/settings/data/datasources/settings_local_data_source.dart';
 import 'package:coffee_tracker/features/statistics/data/datasources/statistics_remote_data_source.dart';
 import 'package:coffee_tracker/features/statistics/data/repositories/statistics_repository_impl.dart';
