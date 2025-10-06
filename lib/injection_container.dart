@@ -1,11 +1,24 @@
 // lib/injection_container.dart
 
+// External packages
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:get_it/get_it.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_interceptor/http_interceptor.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// Core
 import 'package:coffee_tracker/core/auth/auth_interceptor.dart';
 import 'package:coffee_tracker/core/auth/auth_service.dart';
 import 'package:coffee_tracker/core/auth/biometric_service.dart';
 import 'package:coffee_tracker/core/config/app_config.dart';
+import 'package:coffee_tracker/core/data/datasources/generic_kv_remote_data_source.dart';
+import 'package:coffee_tracker/core/data/repositories/generic_kv_repository_impl.dart';
 import 'package:coffee_tracker/core/network/network_info.dart';
 import 'package:coffee_tracker/core/utils/api_utils.dart';
+
+// Features
 import 'package:coffee_tracker/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:coffee_tracker/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:coffee_tracker/features/auth/domain/repositories/auth_repository.dart';
@@ -17,9 +30,7 @@ import 'package:coffee_tracker/features/auth/domain/usecases/request_otp.dart';
 import 'package:coffee_tracker/features/auth/domain/usecases/verify_otp.dart';
 import 'package:coffee_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:coffee_tracker/features/coffee_tracker/data/datasources/coffee_tracker_remote_data_source.dart';
-import 'package:coffee_tracker/core/data/datasources/generic_kv_remote_data_source.dart';
 import 'package:coffee_tracker/features/coffee_tracker/data/repositories/coffee_repository_impl.dart';
-import 'package:coffee_tracker/core/data/repositories/generic_kv_repository_impl.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/repositories/coffee_tracker_repository.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/repositories/generic_kv_repository.dart';
 import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/add_coffee_entry.dart';
@@ -30,27 +41,21 @@ import 'package:coffee_tracker/features/coffee_tracker/domain/usecases/get_daily
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_types_bloc.dart';
 import 'package:coffee_tracker/features/settings/data/datasources/settings_local_data_source.dart';
-import 'package:coffee_tracker/features/statistics/data/datasources/statistics_remote_data_source.dart';
-import 'package:coffee_tracker/features/statistics/data/repositories/statistics_repository_impl.dart';
-import 'package:coffee_tracker/features/statistics/domain/repositories/statistics_repository.dart';
-import 'package:coffee_tracker/features/statistics/domain/usecases/get_statistics.dart';
-import 'package:coffee_tracker/features/statistics/presentation/bloc/statistics_bloc.dart';
 import 'package:coffee_tracker/features/settings/data/datasources/settings_remote_data_source.dart';
 import 'package:coffee_tracker/features/settings/data/repositories/settings_repository_impl.dart';
 import 'package:coffee_tracker/features/settings/domain/repositories/settings_repository.dart';
 import 'package:coffee_tracker/features/settings/domain/usecases/get_settings.dart';
 import 'package:coffee_tracker/features/settings/domain/usecases/update_setting.dart';
 import 'package:coffee_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:coffee_tracker/features/statistics/data/datasources/statistics_remote_data_source.dart';
+import 'package:coffee_tracker/features/statistics/data/repositories/statistics_repository_impl.dart';
+import 'package:coffee_tracker/features/statistics/domain/repositories/statistics_repository.dart';
+import 'package:coffee_tracker/features/statistics/domain/usecases/get_statistics.dart';
+import 'package:coffee_tracker/features/statistics/presentation/bloc/statistics_bloc.dart';
 import 'package:coffee_tracker/features/user/data/datasources/user_remote_data_source.dart';
 import 'package:coffee_tracker/features/user/data/repositories/user_repository_impl.dart';
 import 'package:coffee_tracker/features/user/domain/repositories/user_repository.dart';
 import 'package:coffee_tracker/features/user/presentation/bloc/user_bloc.dart';
-import 'package:get_it/get_it.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http_interceptor/http_interceptor.dart';
 
 final sl = GetIt.instance;
 
