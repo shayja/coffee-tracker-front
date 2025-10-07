@@ -1,3 +1,4 @@
+import 'package:coffee_tracker/core/auth/auth_interceptor.dart';
 import 'package:coffee_tracker/core/bloc/app_bloc_observer.dart';
 import 'package:coffee_tracker/core/theme/app_theme.dart';
 import 'package:coffee_tracker/features/coffee_tracker/presentation/bloc/coffee_tracker_event.dart';
@@ -8,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'injection_container.dart' as di;
 
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/coffee_tracker/presentation/bloc/coffee_tracker_bloc.dart';
@@ -35,7 +37,7 @@ class CoffeeTrackerApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => di.sl<UserBloc>()..add(LoadUserProfile())),
         BlocProvider(create: (_) => di.sl<SettingsBloc>()..add(LoadSettings())),
-        BlocProvider(create: (_) => di.sl<AuthBloc>()),
+        BlocProvider(create: (_) => di.sl<AuthBloc>()..add(CheckAuthenticationEvent())),
         BlocProvider(create: (_) => di.sl<CoffeeTrackerBloc>()),
         BlocProvider(create: (_) => di.sl<StatisticsBloc>()),
         BlocProvider(
@@ -54,6 +56,7 @@ class CoffeeTrackerApp extends StatelessWidget {
 
           return MaterialApp(
             title: 'Coffee Tracker ☕',
+            navigatorKey: navigatorKey,
             theme: AppTheme.lightTheme(),
             darkTheme: AppTheme.darkTheme(),
             themeMode: darkMode ? ThemeMode.dark : ThemeMode.light,
