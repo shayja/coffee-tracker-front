@@ -115,9 +115,11 @@ class AuthService {
 
       final response = await client.post(
         Uri.parse('$baseUrl/auth/refresh'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $refreshToken',
+        },
         body: jsonEncode({
-          'refresh_token': refreshToken,
           'device_id': deviceId,
         }),
       );
