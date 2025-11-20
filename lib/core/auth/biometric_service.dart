@@ -12,7 +12,8 @@ class BiometricService {
   static const String _biometricMobileKey = 'biometric_mobile';
   static const String _biometricTokenKey = 'biometric_token';
   static const String _biometricRefreshTokenKey = 'biometric_refresh_token';
-  static const String _persistentMobileKey = 'persistent_biometric_mobile'; // Survives logout
+  static const String _persistentMobileKey =
+      'persistent_biometric_mobile'; // Survives logout
 
   // Check if biometric login is enabled for any user
   Future<bool> isBiometricLoginEnabled() async {
@@ -60,7 +61,9 @@ class BiometricService {
       await _storage.delete(key: _biometricMobileKey);
       await _storage.delete(key: _biometricTokenKey);
       await _storage.delete(key: _biometricRefreshTokenKey);
-      await _storage.delete(key: _persistentMobileKey); // Clear persistent mobile too
+      await _storage.delete(
+        key: _persistentMobileKey,
+      ); // Clear persistent mobile too
       debugPrint('Biometric login disabled');
     } catch (e) {
       debugPrint('Error disabling biometric login: $e');
@@ -82,11 +85,11 @@ class BiometricService {
     try {
       final persistentMobile = await getPersistentMobile();
       final isEnabled = await isBiometricLoginEnabled();
-      
+
       debugPrint('Checking biometric for mobile: $mobile');
       debugPrint('Persistent mobile: $persistentMobile');
       debugPrint('Biometric enabled: $isEnabled');
-      
+
       return persistentMobile == mobile && isEnabled;
     } catch (e) {
       debugPrint('Error checking biometric availability for mobile: $e');
@@ -99,7 +102,7 @@ class BiometricService {
     try {
       final persistentMobile = await getPersistentMobile();
       final isEnabled = await isBiometricLoginEnabled();
-      
+
       return persistentMobile != null && isEnabled;
     } catch (e) {
       debugPrint('Error checking for any biometric user: $e');
@@ -155,11 +158,8 @@ class BiometricService {
       debugPrint('Starting biometric authentication...');
       final result = await _localAuth.authenticate(
         localizedReason: 'Authenticate to access your coffee tracker',
-        options: const AuthenticationOptions(
-          biometricOnly: true,
-          useErrorDialogs: true,
-          stickyAuth: true,
-        ),
+        biometricOnly: true,
+        persistAcrossBackgrounding: true,
       );
 
       if (result) {
@@ -292,11 +292,8 @@ class BiometricService {
       debugPrint('Starting authentication...');
       final result = await _localAuth.authenticate(
         localizedReason: 'Authenticate to access your coffee tracker',
-        options: const AuthenticationOptions(
-          biometricOnly: true,
-          useErrorDialogs: true,
-          stickyAuth: true,
-        ),
+        biometricOnly: true, // was inside AuthenticationOptions
+        persistAcrossBackgrounding: true, // replaces stickyAuth
       );
 
       debugPrint('Authentication result: $result');

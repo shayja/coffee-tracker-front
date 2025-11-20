@@ -13,7 +13,7 @@ dependencies:
   # State Management
   flutter_bloc: ^9.1.1
   bloc: ^9.0.0
-  get_it: ^8.0.3
+  get_it: ^9.0.5
 
   # Utilities
   equatable: ^2.0.7
@@ -26,17 +26,17 @@ dependencies:
   http: ^1.4.0
   http_interceptor: ^2.0.0
   http_parser: ^4.1.2
-  connectivity_plus: ^6.1.4
+  connectivity_plus: ^7.0.0
   flutter_secure_storage: ^9.2.4
   jwt_decoder: ^2.0.1
 
   # Local Storage & Auth
   shared_preferences: ^2.5.3
-  local_auth: ^2.3.0
+  local_auth: ^3.0.0
 
   # Media & Files
   image_picker: ^1.2.0
-  image_cropper: ^9.1.0
+  image_cropper: ^11.0.0
   mime: ^2.0.0
   path: ^1.9.1
 
