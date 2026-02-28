@@ -16,6 +16,7 @@
     android:label="coffee_tracker"
     android:name="${applicationName}"
     android:icon="@mipmap/ic_launcher"
+    android:usesCleartextTraffic="true"
     android:enableOnBackInvokedCallback="true"
     android:requestLegacyExternalStorage="true">
     <activity

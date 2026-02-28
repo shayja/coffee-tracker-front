@@ -1,13 +1,33 @@
 // lib/core/config/app_config.dart
+import 'dart:io';
+
 import 'package:coffee_tracker/core/config/environment.dart';
+import 'package:flutter/foundation.dart';
 
 class AppConfig {
   // Compile-time constants
-  static const String baseUrl = String.fromEnvironment(
-    'BASE_URL',
-    defaultValue: 'http://10.0.0.2:3000/api/v1', // Dev fallback
-    //defaultValue: 'http://localhost:3000/api/v1', // Dev fallback
-  );
+  static String get baseUrl {
+    const configuredUrl = String.fromEnvironment('BASE_URL');
+    if (configuredUrl.isNotEmpty) {
+      return configuredUrl;
+    }
+
+    if (kReleaseMode) {
+      // Production URL should be set via --dart-define=BASE_URL=...
+      // Fallback if not provided in release mode (though ideally should be provided)
+      return 'https://coffee-tracker-backend.fly.dev/api/v1';
+    }
+
+    // Development fallbacks
+    if (Platform.isAndroid) {
+      return 'http://10.0.0.2:3000/api/v1';
+    } else if (Platform.isIOS) {
+      return 'http://localhost:3000/api/v1';
+    }
+
+    // Default for other platforms (web, desktop, etc.)
+    return 'http://localhost:3000/api/v1';
+  }
 
   static const Environment environment =
       String.fromEnvironment('ENVIRONMENT') == 'production'

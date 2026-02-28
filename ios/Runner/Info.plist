@@ -2,51 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-
-	<!-- ===== NETWORK SECURITY ===== -->
-
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app needs access to your location while it is running.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>This app needs access to your location at all times.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>This app needs access to your location both in the foreground and background.</string>
-
-
- 	<!-- ===== NETWORK SECURITY ===== -->
-    <key>NSAppTransportSecurity</key>
-    <dict>
-        <!-- Allow HTTPS requests to your specific domain -->
-        <key>NSExceptionDomains</key>
-        <dict>
-            <key>coffee-tracker-backend.fly.dev</key>
-            <dict>
-                <key>NSIncludesSubdomains</key>
-                <true/>
-                <key>NSExceptionAllowsInsecureHTTPLoads</key>
-                <false/> <!-- Keep false since you're using HTTPS -->
-                <key>NSExceptionRequiresForwardSecrecy</key>
-                <true/>
-                <key>NSExceptionMinimumTLSVersion</key>
-                <string>TLSv1.2</string>
-            </dict>
-        </dict>
-    </dict>
-	<!-- ===== END NETWORK SECURITY ===== -->
-
-	<!-- ===== BIOMETRIC AUTH ===== -->	
-	<key>NSFaceIDUsageDescription</key>
-	<string>This app uses Face ID for secure login.</string>
-	<!-- ===== END BIOMETRIC AUTH ===== -->
-
-	<!-- ===== IMAGE UPLOAD AND EDIT ===== -->	
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app requires access to your photo library to select and upload photos.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>This app needs permission to save photos to your library.</string>
-	<!-- ===== END IMAGE UPLOAD AND EDIT ===== -->
-
-
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -69,6 +26,60 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>coffee-tracker-backend.fly.dev</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSExceptionMinimumTLSVersion</key>
+				<string>TLSv1.2</string>
+				<key>NSExceptionRequiresForwardSecrecy</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
+	<key>NSFaceIDUsageDescription</key>
+	<string>This app uses Face ID for secure login.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs access to your location both in the foreground and background.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs access to your location at all times.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs access to your location while it is running.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app needs permission to save photos to your library.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to your photo library to select and upload photos.</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>UIWindowScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>flutter</string>
+					<key>UISceneDelegateClassName</key>
+					<string>FlutterSceneDelegate</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -86,9 +97,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
 </dict>
 </plist>

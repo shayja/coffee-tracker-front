@@ -27,7 +27,7 @@ dependencies:
   http_interceptor: ^2.0.0
   http_parser: ^4.1.2
   connectivity_plus: ^7.0.0
-  flutter_secure_storage: ^9.2.4
+  flutter_secure_storage: ^10.0.0
   jwt_decoder: ^2.0.1
 
   # Local Storage & Auth

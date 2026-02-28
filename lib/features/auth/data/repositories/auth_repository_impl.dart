@@ -61,10 +61,18 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final token = await authService.getValidAccessToken();
       if (token != null && token.isNotEmpty) {
-        return Right(token); // Return the token string
-      } else {
-        return Left(NotAuthenticatedFailure());
+        // Check if token is valid
+        if (!await authService.isTokenExpired(token)) {
+          return Right(token);
+        }
+        
+        // Token expired, attempt refresh
+        final newToken = await authService.refreshAccessToken();
+        if (newToken != null) {
+          return Right(newToken);
+        }
       }
+      return Left(NotAuthenticatedFailure());
     } catch (e) {
       return Left(CacheFailure());
     }

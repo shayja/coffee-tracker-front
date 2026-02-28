@@ -18,9 +18,11 @@ class AuthInterceptor implements InterceptorContract {
   Future<http.BaseRequest> interceptRequest({
     required http.BaseRequest request,
   }) async {
-    // Skip login/register endpoints
-    if (request.url.path.startsWith('/auth') &&
-        !request.url.path.endsWith('/refresh')) {
+    // Skip token injection for public auth endpoints and refresh (manual handling)
+    final path = request.url.path;
+    if (path.contains('/auth/request-otp') ||
+        path.contains('/auth/verify-otp') ||
+        path.contains('/auth/refresh')) {
       return request;
     }
 
