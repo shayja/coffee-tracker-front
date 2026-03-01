@@ -19,10 +19,12 @@ class AppConfig {
     }
 
     // Development fallbacks
+    // specific IP for physical devices on the same network
+    // 10.0.0.4 is the current machine IP detected via ifconfig
     if (Platform.isAndroid) {
-      return 'http://10.0.0.2:3000/api/v1';
+      return 'http://10.0.0.4:3000/api/v1';
     } else if (Platform.isIOS) {
-      return 'http://localhost:3000/api/v1';
+      return 'http://10.0.0.4:3000/api/v1';
     }
 
     // Default for other platforms (web, desktop, etc.)
