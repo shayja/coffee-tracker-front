@@ -79,11 +79,13 @@ class _LoginPageState extends State<LoginPage> {
             );
           }
         },
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
               const Icon(Icons.coffee, size: 80, color: Colors.brown),
               const SizedBox(height: 20),
               const Text(
@@ -218,6 +220,8 @@ class _LoginPageState extends State<LoginPage> {
             ],
           ),
         ),
+      ),
+    ),
       ),
     );
   }
