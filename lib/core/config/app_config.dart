@@ -12,11 +12,11 @@ class AppConfig {
       return configuredUrl;
     }
 
-    if (kReleaseMode) {
-      // Production URL should be set via --dart-define=BASE_URL=...
-      // Fallback if not provided in release mode (though ideally should be provided)
-      return 'https://coffee-tracker-backend.fly.dev/api/v1';
-    }
+    //if (kReleaseMode) {
+    // Production URL should be set via --dart-define=BASE_URL=...
+    // Fallback if not provided in release mode (though ideally should be provided)
+    return 'https://coffee-tracker-backend.fly.dev/api/v1';
+    //}
 
     // Development fallbacks
     // specific IP for physical devices on the same network

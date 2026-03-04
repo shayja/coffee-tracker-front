@@ -39,5 +39,20 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    
+    target.build_configurations.each do |config|
+      # 1. Fix the Deployment Target Warning
+      # This sets a "floor". If a pod is set to 11.0, it becomes 13.0. 
+      # If a pod is already 15.0, it stays 15.0.
+      current_target = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f
+      if current_target < 13.0
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+      end
+
+      # 2. Fix the Swift 6 / Concurrency Warnings
+      # This forces pods to use Swift 5 rules even in Xcode 16+, 
+      # avoiding the "Main Actor" errors in older plugins.
+      config.build_settings['SWIFT_VERSION'] = '5.0'
+    end
   end
 end
