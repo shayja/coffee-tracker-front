@@ -24,8 +24,7 @@ class AppConfig {
     if (Platform.isAndroid) {
       return 'http://10.0.0.4:3000/api/v1';
     } else if (Platform.isIOS) {
-      return 'https://coffee-tracker-backend.fly.dev/api/v1';
-      //return 'http://10.0.0.4:3000/api/v1';
+      return 'http://10.0.0.4:3000/api/v1';
     }
 
     // Default for other platforms (web, desktop, etc.)
