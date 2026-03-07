@@ -130,13 +130,13 @@ class AuthService {
         final res = await _saveTokensFromResponse(response.body);
         debugPrint('Token refresh successful');
         return res.accessToken;
-      } else if (response.statusCode == 401) {
-        // Refresh token is invalid/expired
-        debugPrint('Refresh token $refreshToken invalid - logging out');
-        await logout();
-        return null;
       }
 
+      // Any non-200 response means the refresh token is invalid or expired.
+      // Do NOT call logout() here — the caller (interceptor or isAuthenticated)
+      // is responsible for deciding what to do (e.g. logout + navigate to login).
+      // Calling logout() here AND in the interceptor causes a double-logout and
+      // double navigation to /login.
       debugPrint('Refresh failed with status: ${response.statusCode}');
       return null;
     } catch (e) {
@@ -175,10 +175,18 @@ class AuthService {
   Future<void> logoutApi() async {
     try {
       final deviceId = await getOrCreateDeviceId();
+      final accessToken = await storage.read(key: _accessTokenKey);
       debugPrint('Logging out with device ID: $deviceId');
+
+      // /auth/logout is a protected route — send the access token in the header
+      final headers = {'Content-Type': 'application/json'};
+      if (accessToken != null) {
+        headers['Authorization'] = 'Bearer $accessToken';
+      }
+
       final response = await client.post(
         Uri.parse('$baseUrl/auth/logout'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
         body: jsonEncode({'device_id': deviceId}),
       );
       debugPrint('Logging out response: ${response.statusCode}');

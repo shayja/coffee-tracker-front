@@ -37,6 +37,17 @@ class AuthInterceptor implements InterceptorContract {
   Future<http.BaseResponse> interceptResponse({
     required http.BaseResponse response,
   }) async {
+    // Skip interception for auth endpoints to prevent infinite refresh loops
+    if (response.request != null) {
+      final path = response.request!.url.path;
+      if (path.contains('/auth/request-otp') ||
+          path.contains('/auth/verify-otp') ||
+          path.contains('/auth/refresh') ||
+          path.contains('/auth/logout')) {
+        return response;
+      }
+    }
+
     // Handle only http.Response objects
     if (response is http.Response && response.statusCode == 401) {
       final originalRequest = response.request!;
